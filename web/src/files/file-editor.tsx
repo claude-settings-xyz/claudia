@@ -11,14 +11,12 @@ import { ApiError, api, queries, type FileRef } from '@/lib/api'
 import { fileKey, setUnsaved } from '@/lib/location'
 import { notify } from '@/lib/notify'
 import { cn } from '@/lib/ui'
-import { SaveBar } from '@/components/save-bar'
 
 type Draft = { text: string; version: string }
 
 type Props = FileRef & {
-  // Where the buttons go. Without it, they float over the text while there are
-  // unsaved changes. null hides them.
-  toolbar?: Element | null
+  // Where the buttons go. null hides them.
+  toolbar: Element | null
 }
 
 export function FileEditor({ dir, kind, name, toolbar }: Props) {
@@ -112,7 +110,7 @@ export function FileEditor({ dir, kind, name, toolbar }: Props) {
         error ? 'ring-2 ring-destructive/40' : 'focus-within:ring-2 focus-within:ring-primary/30',
       )}
     >
-      {toolbar && createPortal(actions, toolbar)}
+      {toolbar && (isJSON || dirty) && createPortal(actions, toolbar)}
       {stale && (
         <Alert className="mx-4 mt-4 w-auto">
           <AlertTriangle />
@@ -138,14 +136,11 @@ export function FileEditor({ dir, kind, name, toolbar }: Props) {
         spellCheck={!isJSON}
         aria-invalid={!!error}
         placeholder={isJSON ? '{}' : '# Instructions for Claude'}
-        className="min-h-64 flex-1 resize-none rounded-none border-0 bg-transparent px-5 py-4 font-mono text-sm leading-relaxed shadow-none [field-sizing:fixed] focus-visible:ring-0 aria-invalid:ring-0 md:text-sm dark:bg-transparent pb-16"
+        className="min-h-64 flex-1 resize-none rounded-none border-0 bg-transparent px-5 py-4 font-mono text-sm leading-relaxed shadow-none [field-sizing:fixed] focus-visible:ring-0 aria-invalid:ring-0 md:text-sm dark:bg-transparent"
       />
 
       {error && <p className="border-t px-5 py-2.5 text-sm text-destructive">{error}</p>}
 
-      {toolbar === undefined && dirty && (
-        <SaveBar label="Unsaved changes">{actions}</SaveBar>
-      )}
     </div>
   )
 }

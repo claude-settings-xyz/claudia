@@ -1,6 +1,6 @@
 # Claudia
 
-A tray app that manages your Claude Code `settings.json`, `CLAUDE.md`, memory, MCP servers, skills and plugins, globally and for each project folder. The interface runs in your browser at http://127.0.0.1:7377.
+A tray app that manages your Claude Code `settings.json`, `CLAUDE.md`, memory, MCP servers, skills, plugins and marketplaces, globally and for each project folder. The interface runs in your browser at http://127.0.0.1:7377.
 
 ## Layout
 

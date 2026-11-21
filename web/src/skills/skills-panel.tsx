@@ -12,7 +12,6 @@ import { queries, type FileRef, type Skill } from '@/lib/api'
 import { confirmDiscard, fileKey } from '@/lib/location'
 import { parseSettings, setPath, useUpdateSettings, type SkillVisibility } from '@/lib/settings'
 import { EmptyState } from '@/components/empty-state'
-import { LetterTile } from '@/components/tiles'
 import { cn } from '@/lib/ui'
 import { NewSkillForm } from '@/skills/new-skill-form'
 import { VisibilitySelect, visibilities } from '@/skills/visibility-select'
@@ -20,7 +19,7 @@ import { VisibilitySelect, visibilities } from '@/skills/visibility-select'
 // A project shows its own skills and the global ones. dir is where the skill lives.
 type Entry = Skill & { dir: string }
 
-export function SkillsPanel({ dir }: { dir: string }) {
+export function SkillsPanel({ dir, actions }: { dir: string; actions: Element | null }) {
   const own = useQuery(queries.skills(dir))
   const global = useQuery(queries.skills(''))
   const scopeFile = useQuery(queries.file({ dir, kind: 'settings' }))
@@ -127,6 +126,7 @@ export function SkillsPanel({ dir }: { dir: string }) {
         {creating ? (
           <NewSkillForm
             dir={dir}
+            actions={actions}
             onCreated={(name, created) => {
               setCreating(false)
               setSelected(entryKey({ name, dir: created }))
@@ -146,7 +146,7 @@ export function SkillsPanel({ dir }: { dir: string }) {
               />
             </div>
             <div className="min-h-0 flex-1">
-              <FileEditor key={entryKey(current)} {...skillRef(current)} />
+              <FileEditor key={entryKey(current)} {...skillRef(current)} toolbar={actions} />
             </div>
           </>
         ) : (
@@ -194,7 +194,6 @@ function SkillList({
                 active && 'bg-card shadow-panel hover:bg-card',
               )}
             >
-              <LetterTile name={entry.name} size="sm" className={cn(state === 'off' && 'opacity-50')} />
               <span className={cn('min-w-0 flex-1 truncate font-medium', state === 'off' && 'text-muted-foreground')}>
                 {entry.name}
               </span>

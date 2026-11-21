@@ -44,6 +44,8 @@ export type JSONSchema = {
 
 export type SettingsSchema = { version: string; binary: string; schema: JSONSchema }
 
+export type Marketplace = { name: string; source: Record<string, unknown>; lastUpdated?: string; plugins: number }
+
 export type Plugin = {
   id: string
   name: string
@@ -148,6 +150,11 @@ export const queries = {
       queryKey: ['schema'],
       queryFn: () => request<SettingsSchema>('/api/schema'),
       staleTime: 60_000,
+    }),
+  marketplaces: () =>
+    queryOptions({
+      queryKey: ['marketplaces'],
+      queryFn: () => request<Marketplace[]>('/api/marketplaces'),
     }),
   plugins: () =>
     queryOptions({

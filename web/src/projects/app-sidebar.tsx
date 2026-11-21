@@ -1,34 +1,65 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Globe, X } from 'lucide-react'
+import { Ellipsis, List, ListTree, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 
+import { Logo } from '@/components/tiles'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarInput,
   SidebarMenu,
   SidebarMenuAction,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSkeleton,
 } from '@/components/ui/sidebar'
-import { IconTile, Logo } from '@/components/tiles'
 import { api, queries } from '@/lib/api'
-import { navigate, shortPath } from '@/lib/location'
+import { navigate, shortPath, type Tab } from '@/lib/location'
 import { notify } from '@/lib/notify'
+import { parseSettings } from '@/lib/settings'
 import { AddFolderDialog } from '@/projects/add-folder-dialog'
-import { VersionInfo } from '@/projects/version-info'
+import { ProjectTree } from '@/projects/project-tree'
+import { useStoredState } from '@/projects/stored-state'
+import { sections } from '@/sections'
 
-export function AppSidebar({ current }: { current: string }) {
+// Projects on top, the sections of the selected scope at the bottom. Without a
+// selected project, the sections show the global configuration.
+export function AppSidebar({ current, tab }: { current: string; tab: Tab }) {
+  return (
+    <Sidebar>
+      <SidebarHeader className="h-12 flex-row items-center gap-2 border-b border-sidebar-border px-4">
+        <Logo className="size-5" />
+        <span className="font-heading text-sm font-bold tracking-tight">claudia</span>
+      </SidebarHeader>
+      <SidebarContent className="gap-0">
+        <Projects current={current} />
+        <Sections dir={current} tab={tab} />
+      </SidebarContent>
+    </Sidebar>
+  )
+}
+
+function Projects({ current }: { current: string }) {
   const client = useQueryClient()
   const projects = useQuery(queries.projects())
   const health = useQuery(queries.health())
   const [filter, setFilter] = useState('')
+  const [view, setView] = useStoredState<'list' | 'tree'>('claudia.projects.view', 'tree')
+  const [adding, setAdding] = useState(false)
   const home = health.data?.home
 
   const remove = useMutation({
@@ -41,95 +72,130 @@ export function AppSidebar({ current }: { current: string }) {
   })
 
   const query = filter.trim().toLowerCase()
-  const visible = (projects.data ?? []).filter((project) =>
-    project.path.toLowerCase().includes(query),
-  )
+  const visible = (projects.data ?? []).filter((project) => project.path.toLowerCase().includes(query))
 
   return (
-    <Sidebar>
-      <SidebarHeader className="flex-row items-center gap-2.5 px-4 pt-5 pb-3">
-        <Logo />
-        <span className="font-heading text-lg font-semibold tracking-tight">Claudia</span>
-      </SidebarHeader>
-
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                isActive={current === ''}
-                onClick={() => navigate({ dir: '' })}
-                className="h-auto gap-3 py-2"
-              >
-                <IconTile size="sm">
-                  <Globe />
-                </IconTile>
-                <span className="font-medium">Global</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Projects</SidebarGroupLabel>
-          <AddFolderDialog />
-          <SidebarGroupContent className="flex flex-col gap-2">
-            <SidebarInput
-              value={filter}
-              onChange={(event) => setFilter(event.target.value)}
-              placeholder="Filter projects"
-              aria-label="Filter projects"
+    <SidebarGroup className="min-h-0 flex-1">
+      <SidebarGroupContent className="flex min-h-0 flex-1 flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <SidebarInput
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+            placeholder="Filter projects"
+            aria-label="Filter projects"
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={<Button variant="outline" size="icon-sm" className="shrink-0" title="Projects" aria-label="Projects menu" />}
+            >
+              <Ellipsis />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onClick={() => setAdding(true)}>
+                <Plus />
+                Add project…
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup value={view} onValueChange={(value) => setView(value as typeof view)}>
+                <DropdownMenuRadioItem value="list" closeOnClick>
+                  <List />
+                  List view
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="tree" closeOnClick>
+                  <ListTree />
+                  Tree view
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <AddFolderDialog open={adding} onOpenChange={setAdding} />
+        </div>
+        <SidebarMenu className="min-h-0 flex-1 overflow-y-auto">
+          {projects.isPending &&
+            Array.from({ length: 5 }, (_, i) => (
+              <SidebarMenuItem key={i}>
+                <SidebarMenuSkeleton />
+              </SidebarMenuItem>
+            ))}
+          {projects.isError && <p className="px-2 text-sm text-destructive">{projects.error.message}</p>}
+          {projects.isSuccess && visible.length === 0 && (
+            <p className="px-2 text-sm text-muted-foreground">
+              {query ? 'No matching projects.' : 'No folders with Claude files yet. To add one, use the ⋯ menu.'}
+            </p>
+          )}
+          {view === 'tree' && projects.isSuccess && (
+            <ProjectTree
+              projects={visible}
+              current={current}
+              home={home}
+              filtering={query !== ''}
+              onRemove={(project) => remove.mutate(project.path)}
             />
-            <SidebarMenu>
-              {projects.isPending &&
-                Array.from({ length: 5 }, (_, i) => (
-                  <SidebarMenuItem key={i}>
-                    <SidebarMenuSkeleton />
-                  </SidebarMenuItem>
-                ))}
-              {projects.isError && (
-                <p className="px-2 text-sm text-destructive">{projects.error.message}</p>
-              )}
-              {projects.isSuccess && visible.length === 0 && (
-                <p className="px-2 text-sm text-muted-foreground">
-                  {query
-                    ? 'No matching projects.'
-                    : 'No folders with Claude files yet. Use + to add one.'}
-                </p>
-              )}
-              {visible.map((project) => (
-                <SidebarMenuItem key={project.path}>
-                  <SidebarMenuButton
-                    isActive={project.path === current}
-                    onClick={() => navigate({ dir: project.path })}
-                    title={project.path}
-                    className="h-auto flex-col items-start gap-0 py-2"
-                  >
-                    <span className="w-full truncate font-medium">{project.name}</span>
-                    <span className="w-full truncate text-xs text-muted-foreground">
-                      {shortPath(project.path, home)}
-                    </span>
-                  </SidebarMenuButton>
-                  {project.saved && (
-                    <SidebarMenuAction
-                      showOnHover
-                      title="Remove from list"
-                      onClick={() => remove.mutate(project.path)}
-                    >
-                      <X />
-                      <span className="sr-only">Remove {project.name} from list</span>
-                    </SidebarMenuAction>
-                  )}
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-
-      <SidebarFooter className="px-3 pb-3">
-        <VersionInfo />
-      </SidebarFooter>
-    </Sidebar>
+          )}
+          {view === 'list' && visible.map((project) => {
+            const active = project.path === current
+            return (
+              <SidebarMenuItem key={project.path}>
+                <SidebarMenuButton
+                  isActive={active}
+                  // Selecting the open project again goes back to the global view.
+                  onClick={() => navigate({ dir: active ? '' : project.path })}
+                  title={active ? 'Back to global' : project.path}
+                  className="h-auto flex-col items-start gap-0 py-1.5"
+                >
+                  <span className="w-full truncate font-semibold">{project.name}</span>
+                  <span className="w-full truncate text-[11px] text-muted-foreground">
+                    {shortPath(project.path, home)}
+                  </span>
+                </SidebarMenuButton>
+                {project.saved && (
+                  <SidebarMenuAction showOnHover title="Remove from list" onClick={() => remove.mutate(project.path)}>
+                    <X />
+                    <span className="sr-only">Remove {project.name} from list</span>
+                  </SidebarMenuAction>
+                )}
+              </SidebarMenuItem>
+            )
+          })}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
   )
+}
+
+function Sections({ dir, tab }: { dir: string; tab: Tab }) {
+  const counts = useCounts(dir)
+  return (
+    <SidebarGroup className="shrink-0 border-t border-sidebar-border py-3">
+      <SidebarMenu>
+        {sections.map((section) => (
+          <SidebarMenuItem key={section.tab}>
+            <SidebarMenuButton
+              isActive={section.tab === tab}
+              onClick={() => navigate({ tab: section.tab })}
+              className="data-active:text-link"
+            >
+              <section.icon />
+              <span>{section.label}</span>
+            </SidebarMenuButton>
+            {!!counts[section.tab] && <SidebarMenuBadge className="tabular-nums">{counts[section.tab]}</SidebarMenuBadge>}
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    </SidebarGroup>
+  )
+}
+
+function useCounts(dir: string): Partial<Record<Tab, number>> {
+  const skills = useQuery(queries.skills(dir))
+  const memory = useQuery(queries.memory(dir))
+  const mcp = useQuery(queries.mcp(dir))
+  const settings = useQuery(queries.file({ dir, kind: 'settings' }))
+  const enabled = (settings.data && parseSettings(settings.data)?.enabledPlugins) ?? {}
+  return {
+    skills: skills.data?.length,
+    plugins: Object.values(enabled).filter((on) => on === true).length,
+    memory: memory.data?.notes.filter((note) => !note.index).length,
+    mcp: mcp.data?.filter((server) => !dir || server.scope !== 'user').length,
+  }
 }

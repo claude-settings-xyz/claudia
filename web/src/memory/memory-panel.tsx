@@ -1,9 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Brain, ListTree } from 'lucide-react'
+import { Brain } from 'lucide-react'
 import { useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
-import { IconTile, LetterTile } from '@/components/tiles'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,7 +24,7 @@ import { cn } from '@/lib/ui'
 
 type Note = Memory['notes'][number]
 
-export function MemoryPanel({ dir }: { dir: string }) {
+export function MemoryPanel({ dir, actions }: { dir: string; actions: Element | null }) {
   const memory = useQuery(queries.memory(dir))
   const [selected, setSelected] = useState<string | null>(null)
 
@@ -80,13 +79,6 @@ export function MemoryPanel({ dir }: { dir: string }) {
                   note.name === current.name && 'bg-card shadow-panel hover:bg-card',
                 )}
               >
-                {note.index ? (
-                  <IconTile size="sm">
-                    <ListTree />
-                  </IconTile>
-                ) : (
-                  <LetterTile name={note.name} size="sm" />
-                )}
                 <span className="min-w-0 flex-1 truncate font-medium">{label(note)}</span>
               </button>
             </li>
@@ -100,7 +92,7 @@ export function MemoryPanel({ dir }: { dir: string }) {
           {!current.index && <DeleteNote dir={dir} name={current.name} onDeleted={() => setSelected(null)} />}
         </div>
         <div className="min-h-0 flex-1">
-          <FileEditor key={current.name} {...ref(current.name)} />
+          <FileEditor key={current.name} {...ref(current.name)} toolbar={actions} />
         </div>
       </section>
     </div>

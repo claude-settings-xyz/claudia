@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -10,25 +9,22 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { SidebarGroupAction } from '@/components/ui/sidebar'
 import { api, queries } from '@/lib/api'
 import { navigate } from '@/lib/location'
 
-export function AddFolderDialog() {
+export function AddFolderDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const client = useQueryClient()
   const health = useQuery(queries.health())
-  const [open, setOpen] = useState(false)
   const [path, setPath] = useState('')
 
   const add = useMutation({
     mutationFn: api.addProject,
     onSuccess: (project) => {
       client.invalidateQueries({ queryKey: queries.projects().queryKey })
-      setOpen(false)
+      onOpenChange(false)
       setPath('')
       navigate({ dir: project.path })
     },
@@ -52,19 +48,15 @@ export function AddFolderDialog() {
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        setOpen(next)
+        onOpenChange(next)
         add.reset()
         pick.reset()
       }}
     >
-      <DialogTrigger render={<SidebarGroupAction title="Add folder" />}>
-        <Plus />
-        <span className="sr-only">Add folder</span>
-      </DialogTrigger>
       <DialogContent>
         <form onSubmit={submit} className="grid gap-4">
           <DialogHeader>
-            <DialogTitle>Add folder</DialogTitle>
+            <DialogTitle>Add project</DialogTitle>
             <DialogDescription>
               Add a folder to manage its Claude settings, even if you have not used Claude Code in it
               yet.

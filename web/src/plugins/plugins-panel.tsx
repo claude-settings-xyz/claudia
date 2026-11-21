@@ -9,7 +9,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { EmptyState } from '@/components/empty-state'
-import { LetterTile } from '@/components/tiles'
 import { queries, type Plugin } from '@/lib/api'
 import { parseSettings, setPath, useUpdateSettings } from '@/lib/settings'
 
@@ -82,7 +81,6 @@ export function PluginsPanel({ dir }: { dir: string }) {
         <ul className="divide-y rounded-3xl bg-card px-5 shadow-panel">
           {plugins.map((plugin) => (
             <li key={plugin.id} className="flex items-start gap-4 py-4">
-              <LetterTile name={plugin.name} />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium">{plugin.name}</span>

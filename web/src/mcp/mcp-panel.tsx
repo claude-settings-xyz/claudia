@@ -1,11 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Server } from 'lucide-react'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 
 import { EmptyState } from '@/components/empty-state'
 import { FormChoice, FormRow } from '@/components/form-row'
-import { SaveBar } from '@/components/save-bar'
-import { LetterTile } from '@/components/tiles'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -33,7 +32,7 @@ const types = ['stdio', 'http', 'sse']
 
 const serverKey = (server: { scope: string; name: string }) => `${server.scope}:${server.name}`
 
-export function MCPPanel({ dir }: { dir: string }) {
+export function MCPPanel({ dir, actions }: { dir: string; actions: Element | null }) {
   const servers = useQuery(queries.mcp(dir))
   const [selected, setSelected] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
@@ -110,6 +109,7 @@ export function MCPPanel({ dir }: { dir: string }) {
         <ServerForm
           key={creating ? 'new' : current && serverKey(current)}
           dir={dir}
+          actions={actions}
           server={current}
           onSaved={(saved) => {
             setCreating(false)
@@ -152,7 +152,6 @@ function ServerList({
                 active && 'bg-card shadow-panel hover:bg-card',
               )}
             >
-              <LetterTile name={server.name} size="sm" />
               <span className="min-w-0 flex-1 truncate font-medium">{server.name}</span>
               {showScope && (
                 <Badge variant="outline" className="shrink-0">
@@ -169,6 +168,7 @@ function ServerList({
 
 type FormProps = {
   dir: string
+  actions: Element | null
   server?: MCPServer
   onSaved: (server: MCPServer) => void
   onCancel: () => void
@@ -176,7 +176,7 @@ type FormProps = {
 }
 
 // Edits the common fields. Other fields in the config, such as timeouts, are kept.
-function ServerForm({ dir, server, onSaved, onCancel, onDeleted }: FormProps) {
+function ServerForm({ dir, actions, server, onSaved, onCancel, onDeleted }: FormProps) {
   const client = useQueryClient()
   const [name, setName] = useState(server?.name ?? '')
   const [scope, setScope] = useState<MCPScope>(server?.scope ?? (dir ? 'local' : 'user'))
@@ -219,14 +219,14 @@ function ServerForm({ dir, server, onSaved, onCancel, onDeleted }: FormProps) {
   }
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="flex items-center gap-3">
         <h2 className="font-heading text-lg font-semibold">{isNew ? 'New server' : server.name}</h2>
         {!isNew && <Badge variant="secondary">{scopeLabels[server.scope]}</Badge>}
         {!isNew && <DeleteServer dir={dir} server={server} onDeleted={onDeleted} />}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto pb-20">
+      <div className="min-h-0 flex-1 overflow-y-auto rounded-lg">
         <div className="divide-y rounded-3xl bg-card px-5 shadow-panel">
           <FormRow label="Name">
             <Input
@@ -306,25 +306,28 @@ function ServerForm({ dir, server, onSaved, onCancel, onDeleted }: FormProps) {
         </div>
       </div>
 
-      {dirty && (
-        <SaveBar label={isNew ? 'New server' : 'Unsaved changes'}>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              if (isNew) return onCancel()
-              setName(server.name)
-              setScope(server.scope)
-              setConfig(server.config)
-            }}
-          >
-            {isNew ? 'Cancel' : 'Discard'}
-          </Button>
-          <Button size="sm" disabled={nameError || save.isPending} onClick={() => save.mutate()}>
-            {save.isPending ? 'Saving…' : isNew ? 'Add' : 'Save'}
-          </Button>
-        </SaveBar>
-      )}
+      {dirty &&
+        actions &&
+        createPortal(
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (isNew) return onCancel()
+                setName(server.name)
+                setScope(server.scope)
+                setConfig(server.config)
+              }}
+            >
+              {isNew ? 'Cancel' : 'Discard'}
+            </Button>
+            <Button size="sm" disabled={nameError || save.isPending} onClick={() => save.mutate()}>
+              {save.isPending ? 'Saving…' : isNew ? 'Add' : 'Save'}
+            </Button>
+          </>,
+          actions,
+        )}
     </div>
   )
 }

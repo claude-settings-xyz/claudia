@@ -17,7 +17,7 @@ export function VersionInfo() {
       >
         <Info />
       </PopoverTrigger>
-      <PopoverContent side="top" align="start" className="w-auto text-xs">
+      <PopoverContent side="bottom" align="end" className="w-auto text-xs">
         <dl className="grid grid-cols-[auto_auto] gap-x-6 gap-y-1">
           <dt className="text-muted-foreground">Claudia</dt>
           <dd className="font-mono">{health.data?.version ?? '…'}</dd>

@@ -1,0 +1,25 @@
+---
+title: Marketplaces
+description: See the plugin marketplaces that Claude Code knows about.
+---
+
+A marketplace is a catalog of plugins. Claude Code downloads each marketplace once, and all your projects share that copy. So Claudia shows marketplaces only in the global view. In a project, **Marketplaces** asks you to open the global view.
+
+The list has:
+
+- The marketplaces that `~/.claude/settings.json` declares in `extraKnownMarketplaces`.
+- The marketplaces that Claude Code downloaded, such as the official one.
+
+Each row shows the number of plugins and the date of the last update. **Not downloaded yet** means that Claude Code has not fetched the marketplace yet.
+
+A project can also declare marketplaces, in `.claude/settings.json` for the team or in `.claude/settings.local.json` for you. Claudia does not list those. To edit them, open **Configuration** in the project.
+
+## Add or update a marketplace
+
+Claudia does not add, update or remove marketplaces. To do that, use Claude Code:
+
+```bash
+claude plugin marketplace add <source> --scope user|project|local
+```
+
+You can also use `/plugin marketplace add` inside Claude Code.

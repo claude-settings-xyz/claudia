@@ -3,11 +3,11 @@ title: Settings editor
 description: Change Claude Code settings with a form, or edit the JSON directly.
 ---
 
-The **Settings** tab opens a form for the selected file. Choose **JSON** to edit the file as text instead.
+The **Configuration** section opens a form for the selected file. Choose **JSON** to edit the file as text instead.
 
 ## Where the list of settings comes from
 
-Claudia does not ship its own list of settings. It reads the settings schema from the Claude Code that is installed on your computer, so the form always matches the version that reads your files. After you update Claude Code, Claudia reads the new schema the next time you open the tab.
+Claudia does not ship its own list of settings. It reads the settings schema from the Claude Code that is installed on your computer, so the form always matches the version that reads your files. After you update Claude Code, Claudia reads the new schema the next time you open **Configuration**.
 
 To find Claude Code, Claudia checks `claude` on your `PATH`, then `~/.local/bin/claude` and the other usual install folders. It caches the schema for each Claude Code version.
 
@@ -25,7 +25,7 @@ If Claudia cannot read the schema, the form shows an error, and you can still ed
 - Settings that only work when an administrator deploys them are grouped under **Organization settings**.
 - Settings that Claude Code ignores in settings files are not shown.
 
-Plugins and skill visibility are not in this form. They have their own tabs.
+Plugins and skill visibility are not in this form. They have their own sections.
 
 ## Saving
 

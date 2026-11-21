@@ -63,6 +63,7 @@ func (s *Server) Handler(port string, ui http.Handler) http.Handler {
 	mux.HandleFunc("PUT /api/mcp", s.saveMCP)
 	mux.HandleFunc("DELETE /api/mcp", s.deleteMCP)
 	mux.HandleFunc("GET /api/plugins", s.listPlugins)
+	mux.HandleFunc("GET /api/marketplaces", s.listMarketplaces)
 	mux.HandleFunc("GET /api/skills", s.listSkills)
 	mux.HandleFunc("GET /api/schema", s.settingsSchema)
 	mux.Handle("/api/", http.NotFoundHandler())
@@ -221,6 +222,15 @@ func (s *Server) listMemory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, memory)
+}
+
+func (s *Server) listMarketplaces(w http.ResponseWriter, r *http.Request) {
+	marketplaces, err := s.paths.Marketplaces()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, marketplaces)
 }
 
 func (s *Server) listSkills(w http.ResponseWriter, r *http.Request) {

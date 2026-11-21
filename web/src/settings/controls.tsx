@@ -208,6 +208,7 @@ function Control({ field, name, schema, value, path, set, onChange, disabled }: 
           onChange={set}
           label={name}
           disabled={disabled}
+          autoFocus
         />
       )
     case 'object':
@@ -383,11 +384,13 @@ export function MapControl({
   onChange,
   label,
   disabled,
+  autoFocus,
 }: {
   entries: Record<string, string>
   onChange: (entries: Record<string, string>) => void
   label: string
   disabled?: boolean
+  autoFocus?: boolean
 }) {
   const [key, setKey] = useState('')
   const [value, setValue] = useState('')
@@ -440,7 +443,7 @@ export function MapControl({
         onChange={(event) => setKey(event.target.value)}
         onKeyDown={(event) => event.key === 'Enter' && add()}
         placeholder="Name"
-        autoFocus={pairs.length === 0}
+        autoFocus={autoFocus && pairs.length === 0}
         aria-label={`New ${label} name`}
         className="font-mono"
         disabled={disabled}

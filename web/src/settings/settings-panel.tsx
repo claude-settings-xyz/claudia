@@ -122,7 +122,7 @@ export function SettingsPanel({ dir }: { dir: string }) {
         const active = each === kind
         return (
           <div key={each} className={active ? 'min-h-0 flex-1' : 'hidden'}>
-            <div className={view === 'visual' ? 'h-full overflow-y-auto pr-2' : 'hidden'}>
+            <div className={view === 'visual' ? 'h-full overflow-y-auto rounded-lg' : 'hidden'}>
               <SettingsForm
                 dir={dir}
                 kind={each}

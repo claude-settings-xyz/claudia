@@ -121,3 +121,38 @@ func readJSON(path string, v any) error {
 	}
 	return json.Unmarshal(data, v)
 }
+
+type Marketplace struct {
+	Name        string          `json:"name"`
+	Source      json.RawMessage `json:"source"`
+	LastUpdated string          `json:"lastUpdated,omitempty"`
+	Plugins     int             `json:"plugins"`
+}
+
+// Marketplaces lists the plugin marketplaces that Claude Code has added.
+func (p Paths) Marketplaces() ([]Marketplace, error) {
+	var known map[string]struct {
+		Source          json.RawMessage `json:"source"`
+		InstallLocation string          `json:"installLocation"`
+		LastUpdated     string          `json:"lastUpdated"`
+	}
+	if err := readJSON(filepath.Join(p.ConfigDir, "plugins", "known_marketplaces.json"), &known); err != nil {
+		return nil, err
+	}
+
+	marketplaces := []Marketplace{}
+	for name, info := range known {
+		var catalog struct {
+			Plugins []json.RawMessage `json:"plugins"`
+		}
+		readJSON(filepath.Join(info.InstallLocation, ".claude-plugin", "marketplace.json"), &catalog)
+		marketplaces = append(marketplaces, Marketplace{
+			Name:        name,
+			Source:      info.Source,
+			LastUpdated: info.LastUpdated,
+			Plugins:     len(catalog.Plugins),
+		})
+	}
+	slices.SortFunc(marketplaces, func(a, b Marketplace) int { return cmp.Compare(a.Name, b.Name) })
+	return marketplaces, nil
+}

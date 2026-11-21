@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 
 import { FormChoice, FormRow } from '@/components/form-row'
-import { SaveBar } from '@/components/save-bar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -13,11 +13,12 @@ const namePattern = /^[a-z0-9]+(-[a-z0-9]+)*$/
 
 type Props = {
   dir: string
+  actions: Element | null
   onCreated: (name: string, dir: string) => void
   onCancel: () => void
 }
 
-export function NewSkillForm({ dir, onCreated, onCancel }: Props) {
+export function NewSkillForm({ dir, actions, onCreated, onCancel }: Props) {
   const client = useQueryClient()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -42,10 +43,10 @@ export function NewSkillForm({ dir, onCreated, onCancel }: Props) {
   const nameError = name !== '' && !namePattern.test(name)
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-4">
       <h2 className="font-heading text-lg font-semibold">New skill</h2>
 
-      <div className="min-h-0 flex-1 overflow-y-auto pb-20">
+      <div className="min-h-0 flex-1 overflow-y-auto rounded-lg">
         <div className="divide-y rounded-3xl bg-card px-5 shadow-panel">
           <FormRow
             label="Name"
@@ -83,14 +84,18 @@ export function NewSkillForm({ dir, onCreated, onCancel }: Props) {
         </div>
       </div>
 
-      <SaveBar label="New skill">
-        <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button size="sm" disabled={!name || nameError || create.isPending} onClick={() => create.mutate()}>
-          {create.isPending ? 'Creating…' : 'Create'}
-        </Button>
-      </SaveBar>
+      {actions &&
+        createPortal(
+          <>
+            <Button variant="ghost" size="sm" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button size="sm" disabled={!name || nameError || create.isPending} onClick={() => create.mutate()}>
+              {create.isPending ? 'Creating…' : 'Create'}
+            </Button>
+          </>,
+          actions,
+        )}
     </div>
   )
 }

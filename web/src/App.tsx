@@ -1,124 +1,125 @@
 import { useQuery } from '@tanstack/react-query'
-import { Brain, FileText, Globe, Puzzle, Server, SlidersHorizontal, Sparkles } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { ChevronRight, Globe, X } from 'lucide-react'
+import { useState } from 'react'
 
+import { EmptyState } from '@/components/empty-state'
+import { Button } from '@/components/ui/button'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { IconTile, LetterTile } from '@/components/tiles'
 import { FileEditor } from '@/files/file-editor'
 import { queries } from '@/lib/api'
 import { navigate, shortPath, useLocation, type Tab } from '@/lib/location'
-import { parseSettings } from '@/lib/settings'
+import { cn } from '@/lib/ui'
+import { MarketplacesPanel } from '@/marketplaces/marketplaces-panel'
 import { MCPPanel } from '@/mcp/mcp-panel'
 import { MemoryPanel } from '@/memory/memory-panel'
 import { PluginsPanel } from '@/plugins/plugins-panel'
 import { AppSidebar } from '@/projects/app-sidebar'
+import { VersionInfo } from '@/projects/version-info'
+import { sections, type Section as SectionInfo } from '@/sections'
 import { SettingsPanel } from '@/settings/settings-panel'
 import { SkillsPanel } from '@/skills/skills-panel'
 
+// Sections that scroll as a whole. The others scroll inside their own panels.
+const scrolls: Tab[] = ['plugins', 'marketplaces']
+
 export default function App() {
   const { dir, tab } = useLocation()
-  const health = useQuery(queries.health())
-  const skills = useQuery(queries.skills(dir))
-  const memory = useQuery(queries.memory(dir))
-  const mcp = useQuery(queries.mcp(dir))
-  const settings = useQuery(queries.file({ dir, kind: 'settings' }))
-  const name = dir ? (dir.split(/[\\/]/).filter(Boolean).pop() ?? dir) : 'Global'
-  const pluginsOn = Object.values((settings.data && parseSettings(settings.data)?.enabledPlugins) ?? {}).filter(
-    (on) => on === true,
-  ).length
+  const [actions, setActions] = useState<HTMLDivElement | null>(null)
 
   return (
     <SidebarProvider>
-      <AppSidebar current={dir} />
-      <SidebarInset className="relative h-svh min-h-0 overflow-hidden">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(60%_100%_at_20%_0%,color-mix(in_oklch,var(--primary)_14%,transparent),transparent)]"
-        />
-
-        <header className="relative flex shrink-0 items-center gap-4 px-6 pt-5 pb-5">
-          <SidebarTrigger className="-ml-2 text-muted-foreground" />
-          {dir ? (
-            <LetterTile name={name} size="lg" />
-          ) : (
-            <IconTile size="lg">
-              <Globe />
-            </IconTile>
-          )}
-          <div className="min-w-0">
-            <h1 className="truncate font-heading text-2xl font-semibold tracking-tight">{name}</h1>
-            <p className="truncate font-mono text-xs text-muted-foreground">
-              {dir ? shortPath(dir, health.data?.home) : 'Applies to every folder'}
-            </p>
-          </div>
-        </header>
-
+      <AppSidebar current={dir} tab={tab} />
+      <SidebarInset className="h-svh min-h-0 overflow-hidden">
+        <Header dir={dir} tab={tab} actions={setActions} />
         {/* key resets editors and their drafts when the folder changes */}
-        <Tabs
-          key={dir}
-          value={tab}
-          onValueChange={(value) => navigate({ tab: value as Tab })}
-          className="relative min-h-0 flex-1 gap-0"
-        >
-          <div className="px-6 pb-4">
-            <TabsList>
-              <TabTrigger value="settings" icon={<SlidersHorizontal />} label="Settings" />
-              <TabTrigger value="claude-md" icon={<FileText />} label="CLAUDE.md" />
-              <TabTrigger
-                value="memory"
-                icon={<Brain />}
-                label="Memory"
-                count={memory.data?.notes.filter((note) => !note.index).length}
-              />
-              <TabTrigger
-                value="mcp"
-                icon={<Server />}
-                label="MCP"
-                count={mcp.data?.filter((server) => (dir ? server.scope !== 'user' : true)).length}
-              />
-              <TabTrigger value="skills" icon={<Sparkles />} label="Skills" count={skills.data?.length} />
-              <TabTrigger value="plugins" icon={<Puzzle />} label="Plugins" count={pluginsOn} />
-            </TabsList>
-          </div>
-          {/* keepMounted keeps unsaved edits when you switch tabs */}
-          <TabsContent value="settings" keepMounted className={panelClass}>
-            <SettingsPanel dir={dir} />
-          </TabsContent>
-          <TabsContent value="claude-md" keepMounted className={panelClass}>
-            <FileEditor dir={dir} kind="claude-md" />
-          </TabsContent>
-          <TabsContent value="memory" keepMounted className={panelClass}>
-            <MemoryPanel dir={dir} />
-          </TabsContent>
-          <TabsContent value="mcp" keepMounted className={panelClass}>
-            <MCPPanel dir={dir} />
-          </TabsContent>
-          <TabsContent value="skills" keepMounted className={panelClass}>
-            <SkillsPanel dir={dir} />
-          </TabsContent>
-          <TabsContent value="plugins" keepMounted className={`${panelClass} overflow-y-auto`}>
-            <PluginsPanel dir={dir} />
-          </TabsContent>
-        </Tabs>
+        <main key={dir} className="flex min-h-0 flex-1 flex-col">
+          {/* Every section stays mounted, so that switching keeps unsaved edits. */}
+          {sections.map((section) => (
+            <div
+              key={section.tab}
+              className={cn('min-h-0 flex-1 p-5 animate-in fade-in-0 duration-150', section.tab !== tab && 'hidden')}
+            >
+              {/* Cards clip with small round corners where they scroll out of view. */}
+              <div className={cn('h-full', scrolls.includes(section.tab) && 'overflow-y-auto rounded-lg')}>
+                {dir && section.globalOnly ? (
+                  <GlobalOnly section={section} />
+                ) : (
+                  <Section tab={section.tab} dir={dir} actions={section.tab === tab ? actions : null} />
+                )}
+              </div>
+            </div>
+          ))}
+        </main>
       </SidebarInset>
     </SidebarProvider>
   )
 }
 
-function TabTrigger({ value, icon, label, count }: { value: Tab; icon: ReactNode; label: string; count?: number }) {
+function GlobalOnly({ section }: { section: SectionInfo }) {
   return (
-    <TabsTrigger value={value} className="gap-2 px-3 data-active:[&>svg]:text-link">
-      {icon}
-      {label}
-      {!!count && (
-        <span className="rounded-full bg-primary/15 px-1.5 text-[11px] leading-4 font-semibold text-link tabular-nums">
-          {count}
-        </span>
-      )}
-    </TabsTrigger>
+    <EmptyState icon={<Globe />} title={`${section.label} are global`}>
+      <div className="flex flex-col items-center gap-4">
+        They apply to every project, so you manage them in the global view.
+        <Button onClick={() => navigate({ dir: '' })}>Open the global view</Button>
+      </div>
+    </EmptyState>
   )
 }
 
-// Showing a panel replays the fade, so switching tabs feels smooth.
-const panelClass = 'min-h-0 flex-1 px-6 pb-6 animate-in fade-in-0 slide-in-from-bottom-1 duration-200'
+// Save buttons go into the header. Hidden sections get null, so they show none.
+function Section({ tab, dir, actions }: { tab: Tab; dir: string; actions: Element | null }) {
+  switch (tab) {
+    case 'settings':
+      return <SettingsPanel dir={dir} />
+    case 'claude-md':
+      return <FileEditor dir={dir} kind="claude-md" toolbar={actions} />
+    case 'skills':
+      return <SkillsPanel dir={dir} actions={actions} />
+    case 'plugins':
+      return <PluginsPanel dir={dir} />
+    case 'marketplaces':
+      return <MarketplacesPanel />
+    case 'memory':
+      return <MemoryPanel dir={dir} actions={actions} />
+    case 'mcp':
+      return <MCPPanel dir={dir} actions={actions} />
+  }
+}
+
+// One line: where you are, and the way back to the global view.
+function Header({ dir, tab, actions }: { dir: string; tab: Tab; actions: (element: HTMLDivElement | null) => void }) {
+  const health = useQuery(queries.health())
+  const name = dir.split(/[\\/]/).filter(Boolean).pop() ?? dir
+  const section = sections.find((each) => each.tab === tab)
+
+  return (
+    <header className="flex h-12 shrink-0 items-center gap-3 border-b px-3">
+      <SidebarTrigger className="text-muted-foreground" />
+      <nav aria-label="Location" className="flex min-w-0 items-center gap-2 text-sm">
+        {dir ? (
+          <span className="flex min-w-0 items-center gap-1.5 rounded-md border px-2 py-0.5">
+            <span className="truncate font-semibold">{name}</span>
+            <button
+              type="button"
+              title="Back to global"
+              aria-label="Back to global"
+              onClick={() => navigate({ dir: '' })}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <X className="size-3.5" />
+            </button>
+          </span>
+        ) : (
+          <span className="font-semibold">Global</span>
+        )}
+        <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
+        <span className="font-semibold">{section?.label}</span>
+      </nav>
+      <span className="ml-auto truncate text-xs text-muted-foreground">
+        {dir ? shortPath(dir, health.data?.home) : 'Applies to every folder'}
+      </span>
+      <VersionInfo />
+      <div ref={actions} className="flex items-center gap-2 empty:hidden" />
+    </header>
+  )
+}

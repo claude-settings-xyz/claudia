@@ -40,9 +40,9 @@ The first file in the list wins. Managed settings from your organization and com
 
 Claudia takes your projects from `~/.claude.json`, which lists every folder where you used Claude Code. It only shows the folders that have a settings file or a `CLAUDE.md`. The most recently used folders come first.
 
-To manage a folder that is not in the list, add it with the **+** button. Type its path, or choose **Select folder** to pick it in your system's folder dialog. On Linux, the dialog needs `zenity`, `qarma` or `matedialog`. Folders that you add stay in the list, even without Claude files.
+To manage a folder that is not in the list, open the **⋯** menu next to the filter and choose **Add project**. Type its path, or choose **Select folder** to pick it in your system's folder dialog. On Linux, the dialog needs `zenity`, `qarma` or `matedialog`. Folders that you add stay in the list, even without Claude files.
 
-Your home folder is not in the list. Its `.claude` folder holds the global files, so you edit them under **Global**.
+Your home folder is not in the list. Its `.claude` folder holds the global files, so you edit them in the global view, with no project selected.
 
 ## Custom config directory
 
@@ -53,4 +53,4 @@ Claudia respects the `CLAUDE_CONFIG_DIR` environment variable. If you set it, Cl
 - Settings files must contain valid JSON. Claudia does not save invalid JSON.
 - Claudia writes each file atomically. A failed save does not leave a half-written file.
 - If a file changed on disk after you started editing, Claudia does not save. For example, Claude Code may have written to it. Choose **Load theirs** to discard your edits, or **Keep mine** to save over the new version.
-- If you have unsaved changes, Claudia asks before you switch to another folder.
+- While you have unsaved changes, **Discard** and **Save** show at the top right. If you switch to another folder, Claudia asks first.
