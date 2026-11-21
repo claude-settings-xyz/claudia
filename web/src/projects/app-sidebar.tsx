@@ -75,7 +75,7 @@ function Projects({ current }: { current: string }) {
   const visible = (projects.data ?? []).filter((project) => project.path.toLowerCase().includes(query))
 
   return (
-    <SidebarGroup className="min-h-0 flex-1">
+    <SidebarGroup className="min-h-0 flex-1 opacity-70 transition-opacity duration-150 focus-within:opacity-100 hover:opacity-100">
       <SidebarGroupContent className="flex min-h-0 flex-1 flex-col gap-2">
         <div className="flex items-center gap-2">
           <SidebarInput
