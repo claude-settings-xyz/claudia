@@ -166,7 +166,7 @@ function Projects({ current }: { current: string }) {
 function Sections({ dir, tab }: { dir: string; tab: Tab }) {
   const counts = useCounts(dir)
   return (
-    <SidebarGroup className="shrink-0 border-t border-sidebar-border py-3">
+    <SidebarGroup className="shrink-0 border-t border-sidebar-border bg-background py-3">
       <SidebarMenu>
         {sections.map((section) => (
           <SidebarMenuItem key={section.tab}>
