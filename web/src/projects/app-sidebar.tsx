@@ -26,6 +26,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSkeleton,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { api, queries } from '@/lib/api'
 import { navigate, shortPath, type Tab } from '@/lib/location'
@@ -40,17 +41,57 @@ import { sections } from '@/sections'
 // Projects on top, the sections of the selected scope at the bottom. Without a
 // selected project, the sections show the global configuration.
 export function AppSidebar({ current, tab }: { current: string; tab: Tab }) {
+  const { toggleSidebar } = useSidebar()
+
   return (
-    <Sidebar>
-      <SidebarHeader className="h-12 flex-row items-center gap-2 border-b border-sidebar-border bg-background px-4">
-        <Logo className="size-5" />
-        <span className="font-heading text-sm font-bold tracking-tight">claudia</span>
-      </SidebarHeader>
-      <SidebarContent className="gap-0">
-        <Projects current={current} />
-        <Sections dir={current} tab={tab} />
-      </SidebarContent>
-    </Sidebar>
+    <>
+      <Sidebar className="ease-out">
+        <SidebarHeader className={cn('h-12 flex-row items-center border-b border-sidebar-border bg-background px-2', materialize)}>
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            title="Hide sidebar (⌘B)"
+            aria-label="Hide sidebar"
+            className="flex h-9 items-center gap-2 px-2"
+          >
+            <Logo className="size-5" />
+            <span className="font-heading text-sm font-bold tracking-tight">claudia</span>
+          </button>
+        </SidebarHeader>
+        <SidebarContent className={cn('gap-0', materialize)}>
+          <Projects current={current} />
+          <Sections dir={current} tab={tab} />
+        </SidebarContent>
+      </Sidebar>
+      <FloatingLogo />
+    </>
+  )
+}
+
+// The panel slides while its contents fade in and come into focus.
+const materialize =
+  'transition-[opacity,filter] duration-300 ease-out group-data-[state=collapsed]:opacity-0 group-data-[state=collapsed]:blur-sm'
+
+// While the sidebar is hidden, the logo stays where it was and brings the sidebar back.
+function FloatingLogo() {
+  const { open, openMobile, isMobile, toggleSidebar } = useSidebar()
+  const visible = isMobile ? !openMobile : !open
+
+  return (
+    <button
+      type="button"
+      onClick={toggleSidebar}
+      title="Show sidebar (⌘B)"
+      aria-label="Show sidebar"
+      aria-hidden={!visible}
+      tabIndex={visible ? 0 : -1}
+      className={cn(
+        'fixed top-1.5 left-2 z-20 grid size-9 place-items-center transition-opacity duration-200 ease-out',
+        !visible && 'pointer-events-none opacity-0',
+      )}
+    >
+      <Logo className="size-5" />
+    </button>
   )
 }
 

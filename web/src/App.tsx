@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
 import { Button } from '@/components/ui/button'
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sidebar'
 import { FileEditor } from '@/files/file-editor'
 import { queries } from '@/lib/api'
 import { navigate, shortPath, useLocation, type Tab } from '@/lib/location'
@@ -91,10 +91,17 @@ function Header({ dir, tab, actions }: { dir: string; tab: Tab; actions: (elemen
   const health = useQuery(queries.health())
   const name = dir.split(/[\\/]/).filter(Boolean).pop() ?? dir
   const section = sections.find((each) => each.tab === tab)
+  const { open, openMobile, isMobile } = useSidebar()
+  const sidebarHidden = isMobile ? !openMobile : !open
 
   return (
-    <header className="flex h-12 shrink-0 items-center gap-3 border-b px-3">
-      <SidebarTrigger className="text-muted-foreground" />
+    // While the sidebar is hidden, the floating logo takes the left corner.
+    <header
+      className={cn(
+        'flex h-12 shrink-0 items-center gap-3 border-b px-5 transition-[padding] duration-200 ease-out',
+        sidebarHidden && 'pl-14',
+      )}
+    >
       <nav aria-label="Location" className="flex min-w-0 items-center gap-2 text-sm">
         {dir ? (
           <span className="flex min-w-0 items-center gap-1.5 rounded-md border px-2 py-0.5">
