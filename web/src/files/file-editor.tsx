@@ -106,7 +106,7 @@ export function FileEditor({ dir, kind, name, toolbar }: Props) {
   return (
     <div
       className={cn(
-        'relative flex h-full min-h-0 flex-col overflow-hidden rounded-3xl bg-code text-code-foreground shadow-panel transition-shadow',
+        'relative flex h-full min-h-0 flex-col overflow-hidden rounded-3xl bg-card shadow-panel transition-shadow',
         error ? 'ring-2 ring-destructive/40' : 'focus-within:ring-2 focus-within:ring-primary/30',
       )}
     >

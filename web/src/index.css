@@ -45,8 +45,6 @@
     --sidebar-accent-foreground: oklch(0.12 0 0);
     --sidebar-border: oklch(0.82 0 0);
     --sidebar-ring: oklch(0.55 0.16 38);
-    --code: #1a1a1a;
-    --code-foreground: #ececec;
     --committed: #3d6b2e;
     --gitignored: #b85c3a;
     --local: #5e5e5e;
@@ -95,8 +93,6 @@
     --sidebar-accent-foreground: oklch(0.99 0 0);
     --sidebar-border: oklch(1 0 0 / 18%);
     --sidebar-ring: oklch(0.74 0.15 42);
-    --code: #0d0d0d;
-    --code-foreground: #ececec;
     --committed: #6fa85c;
     --gitignored: #e08a60;
     --local: #a3a3a3;
@@ -142,8 +138,6 @@
     --color-link: var(--link);
     --color-dim: var(--dim);
     --color-faint: var(--faint);
-    --color-code: var(--code);
-    --color-code-foreground: var(--code-foreground);
     --color-committed: var(--committed);
     --color-gitignored: var(--gitignored);
     --color-local: var(--local);
