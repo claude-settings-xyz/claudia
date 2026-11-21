@@ -62,7 +62,8 @@ export function SettingRow({ path, schema, value, onChange, disabled }: RowProps
       <div className="group/head flex items-start gap-6">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            {value !== undefined && (
+            {/* Top-level settings are already grouped by whether they are set. */}
+            {value !== undefined && path.length > 1 && (
               <span aria-label="Set in this file" className="size-1.5 shrink-0 rounded-full bg-primary" />
             )}
             <code className="font-mono text-sm font-medium break-all">{name}</code>
