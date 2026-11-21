@@ -18,9 +18,9 @@ import { SettingsForm } from '@/settings/settings-form'
 
 type View = 'visual' | 'json'
 
-const files: Record<string, { label: string; name: string }> = {
-  settings: { label: 'Shared', name: 'settings.json' },
-  'settings-local': { label: 'Local', name: 'settings.local.json' },
+const files: Record<string, { label: string; name: string; tone: string }> = {
+  settings: { label: 'Shared', name: 'settings.json', tone: 'aria-pressed:border-committed aria-pressed:text-committed' },
+  'settings-local': { label: 'Local', name: 'settings.local.json', tone: 'aria-pressed:border-gitignored aria-pressed:text-gitignored' },
 }
 
 // Every file and view stays mounted, so that switching keeps unsaved JSON edits.
@@ -68,7 +68,7 @@ export function SettingsPanel({ dir }: { dir: string }) {
           >
             {kinds.map((each) => (
               <Tooltip key={each}>
-                <TooltipTrigger render={<ToggleGroupItem value={each} />}>{files[each].label}</TooltipTrigger>
+                <TooltipTrigger render={<ToggleGroupItem value={each} className={files[each].tone} />}>{files[each].label}</TooltipTrigger>
                 <TooltipContent className="font-mono">{files[each].name}</TooltipContent>
               </Tooltip>
             ))}

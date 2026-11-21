@@ -12,6 +12,7 @@ import { queries, type FileRef, type Skill } from '@/lib/api'
 import { confirmDiscard, fileKey } from '@/lib/location'
 import { parseSettings, setPath, useUpdateSettings, type SkillVisibility } from '@/lib/settings'
 import { EmptyState } from '@/components/empty-state'
+import { ScopeBadge } from '@/components/scope-badge'
 import { cn } from '@/lib/ui'
 import { NewSkillForm } from '@/skills/new-skill-form'
 import { VisibilitySelect, visibilities } from '@/skills/visibility-select'
@@ -137,7 +138,7 @@ export function SkillsPanel({ dir, actions }: { dir: string; actions: Element | 
           <>
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="font-heading text-lg font-semibold">/{current.name}</h2>
-              {dir && !current.dir && <Badge variant="secondary">Global</Badge>}
+              {dir && !current.dir && <ScopeBadge scope="global" />}
               <VisibilitySelect
                 value={dir ? scopeOverrides[current.name] : effective(current.name)}
                 inherited={dir ? inherited(current.name) : undefined}
@@ -212,7 +213,7 @@ function SkillList({
 
 function GroupLabel({ className, children }: { className?: string; children: string }) {
   return (
-    <h3 className={cn('px-3 pb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase', className)}>
+    <h3 className={cn('px-3 pb-2 text-xs font-bold tracking-wider text-dim uppercase', className)}>
       {children}
     </h3>
   )

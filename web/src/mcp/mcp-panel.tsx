@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom'
 import { EmptyState } from '@/components/empty-state'
 import { FormChoice, FormRow } from '@/components/form-row'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
+import { ScopeBadge } from '@/components/scope-badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -26,7 +26,7 @@ import { isPlainObject } from '@/lib/settings'
 import { cn } from '@/lib/ui'
 import { ListControl, MapControl } from '@/settings/controls'
 
-const scopeLabels: Record<MCPScope, string> = { user: 'Global', local: 'Local', project: 'Shared' }
+const scopes = { user: 'global', local: 'local', project: 'shared' } as const
 
 const types = ['stdio', 'http', 'sse']
 
@@ -87,7 +87,7 @@ export function MCPPanel({ dir, actions }: { dir: string; actions: Element | nul
     <div className="flex h-full min-h-0 gap-6">
       <aside className="flex min-h-0 w-72 shrink-0 flex-col gap-3">
         <div className="flex items-center justify-between gap-2 px-3">
-          <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+          <span className="text-xs font-bold tracking-wider text-dim uppercase">
             {dir ? 'This project' : 'Servers'}
           </span>
           {addButton}
@@ -96,7 +96,7 @@ export function MCPPanel({ dir, actions }: { dir: string; actions: Element | nul
           <ServerList servers={own} current={current} onOpen={open} showScope={!!dir} empty="None yet." />
           {dir && global.length > 0 && (
             <>
-              <h3 className="mt-4 px-3 pb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+              <h3 className="mt-4 px-3 pb-2 text-xs font-bold tracking-wider text-dim uppercase">
                 Global
               </h3>
               <ServerList servers={global} current={current} onOpen={open} />
@@ -154,9 +154,7 @@ function ServerList({
             >
               <span className="min-w-0 flex-1 truncate font-medium">{server.name}</span>
               {showScope && (
-                <Badge variant="outline" className="shrink-0">
-                  {scopeLabels[server.scope]}
-                </Badge>
+                <ScopeBadge scope={scopes[server.scope]} />
               )}
             </button>
           </li>
@@ -222,7 +220,7 @@ function ServerForm({ dir, actions, server, onSaved, onCancel, onDeleted }: Form
     <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="flex items-center gap-3">
         <h2 className="font-heading text-lg font-semibold">{isNew ? 'New server' : server.name}</h2>
-        {!isNew && <Badge variant="secondary">{scopeLabels[server.scope]}</Badge>}
+        {!isNew && <ScopeBadge scope={scopes[server.scope]} />}
         {!isNew && <DeleteServer dir={dir} server={server} onDeleted={onDeleted} />}
       </div>
 

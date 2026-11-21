@@ -142,7 +142,7 @@ function Section({
     <section className="flex flex-col gap-3">
       {title && (
         <div className="flex flex-wrap items-center gap-2 px-1">
-          <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">{title}</h2>
+          <h2 className="text-xs font-bold tracking-wider text-dim uppercase">{title}</h2>
           {count !== undefined && (
             <span className="rounded-full bg-primary/15 px-1.5 text-[11px] leading-4 font-semibold text-link tabular-nums">
               {count}

@@ -41,7 +41,7 @@ import { sections } from '@/sections'
 export function AppSidebar({ current, tab }: { current: string; tab: Tab }) {
   return (
     <Sidebar>
-      <SidebarHeader className="h-12 flex-row items-center gap-2 border-b border-sidebar-border px-4">
+      <SidebarHeader className="h-12 flex-row items-center gap-2 border-b border-sidebar-border bg-background px-4">
         <Logo className="size-5" />
         <span className="font-heading text-sm font-bold tracking-tight">claudia</span>
       </SidebarHeader>
@@ -144,7 +144,7 @@ function Projects({ current }: { current: string }) {
                   className="h-auto flex-col items-start gap-0 py-1.5"
                 >
                   <span className="w-full truncate font-semibold">{project.name}</span>
-                  <span className="w-full truncate text-[11px] text-muted-foreground">
+                  <span className="w-full truncate text-[11px] text-dim">
                     {shortPath(project.path, home)}
                   </span>
                 </SidebarMenuButton>
@@ -175,10 +175,12 @@ function Sections({ dir, tab }: { dir: string; tab: Tab }) {
               onClick={() => navigate({ tab: section.tab })}
               className="data-active:text-link"
             >
-              <section.icon />
+              <section.icon className={section.color} />
               <span>{section.label}</span>
             </SidebarMenuButton>
-            {!!counts[section.tab] && <SidebarMenuBadge className="tabular-nums">{counts[section.tab]}</SidebarMenuBadge>}
+            {!!counts[section.tab] && (
+              <SidebarMenuBadge className="text-dim tabular-nums">{counts[section.tab]}</SidebarMenuBadge>
+            )}
           </SidebarMenuItem>
         ))}
       </SidebarMenu>
