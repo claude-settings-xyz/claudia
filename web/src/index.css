@@ -49,13 +49,13 @@
     --gitignored: #b85c3a;
     --local: #5e5e5e;
     --when: #4a7fb5;
-    --file-settings: #737373;
-    --file-instructions: #4f80b0;
-    --file-skills: #b08a28;
-    --file-plugins: #6b8455;
-    --file-marketplaces: #3f8a8a;
-    --file-memory: #c07a30;
-    --file-mcp: #7f5fa8;
+    --file-settings: #b85c3a;
+    --file-instructions: #3b6b9c;
+    --file-skills: #8a6a12;
+    --file-plugins: #53703d;
+    --file-marketplaces: #2c7373;
+    --file-memory: #a05d18;
+    --file-mcp: #6a4b94;
 }
 
 .dark {
@@ -97,7 +97,7 @@
     --gitignored: #e08a60;
     --local: #a3a3a3;
     --when: #8bb4e0;
-    --file-settings: #a3a3a3;
+    --file-settings: #e08a60;
     --file-instructions: #6a9bcc;
     --file-skills: #d4a843;
     --file-plugins: #8fa876;

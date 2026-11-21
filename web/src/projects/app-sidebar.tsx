@@ -31,6 +31,7 @@ import { api, queries } from '@/lib/api'
 import { navigate, shortPath, type Tab } from '@/lib/location'
 import { notify } from '@/lib/notify'
 import { parseSettings } from '@/lib/settings'
+import { cn } from '@/lib/ui'
 import { AddFolderDialog } from '@/projects/add-folder-dialog'
 import { ProjectTree } from '@/projects/project-tree'
 import { useStoredState } from '@/projects/stored-state'
@@ -174,9 +175,9 @@ function Sections({ dir, tab }: { dir: string; tab: Tab }) {
             <SidebarMenuButton
               isActive={section.tab === tab}
               onClick={() => navigate({ tab: section.tab })}
-              className="data-active:text-link"
+              className={cn('data-active:bg-transparent', section.color)}
             >
-              <section.icon className={section.color} />
+              <section.icon />
               <span>{section.label}</span>
             </SidebarMenuButton>
             {!!counts[section.tab] && (
