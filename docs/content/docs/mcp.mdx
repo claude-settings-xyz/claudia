@@ -1,0 +1,29 @@
+---
+title: MCP servers
+description: Add, edit and remove the MCP servers that Claude Code uses.
+---
+
+MCP servers give Claude tools, such as access to a database or an issue tracker. The **MCP** tab lists them and lets you change them.
+
+## Scopes
+
+| Scope  | Where Claude Code keeps it               | Who uses it                     |
+| ------ | ---------------------------------------- | ------------------------------- |
+| Global | `~/.claude.json`                         | You, in every folder            |
+| Local  | `~/.claude.json`, under the project      | You, in this project only       |
+| Shared | `.mcp.json` in the project               | Everyone who uses the repository |
+
+In a project, the tab shows the local and shared servers first, then your global servers.
+
+## Add or edit a server
+
+Choose **+**, then enter a name, a scope and a type:
+
+- **Command (stdio)**: Claude Code starts the server with a command, arguments and environment variables.
+- **HTTP** or **SSE**: Claude Code connects to a URL, with optional headers.
+
+Settings that the form does not show, such as timeouts, stay as they are.
+
+## How Claudia saves
+
+Claude Code writes to `~/.claude.json` while it runs. To avoid conflicts, Claudia saves through Claude Code itself, with `claude mcp add-json` and `claude mcp remove`. If Claude Code refuses a change, for example because a name is taken, Claudia shows its message.

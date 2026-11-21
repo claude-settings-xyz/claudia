@@ -11,6 +11,7 @@ import { ApiError, api, queries, type FileRef } from '@/lib/api'
 import { fileKey, setUnsaved } from '@/lib/location'
 import { notify } from '@/lib/notify'
 import { cn } from '@/lib/ui'
+import { SaveBar } from '@/components/save-bar'
 
 type Draft = { text: string; version: string }
 
@@ -33,7 +34,6 @@ export function FileEditor({ dir, kind, name, toolbar }: Props) {
       client.setQueryData(queries.file(target).queryKey, file)
       if (kind === 'skill') client.invalidateQueries({ queryKey: ['skills'] })
       setDraft(null)
-      notify.success('Saved')
     },
     onError: (error) => {
       if (error instanceof ApiError && error.status === 409) {
@@ -144,10 +144,7 @@ export function FileEditor({ dir, kind, name, toolbar }: Props) {
       {error && <p className="border-t px-5 py-2.5 text-sm text-destructive">{error}</p>}
 
       {toolbar === undefined && dirty && (
-        <div className="absolute right-4 bottom-4 flex items-center gap-2 rounded-full bg-popover p-1 pl-4 shadow-lg ring-1 ring-foreground/10 animate-in fade-in-0 slide-in-from-bottom-2">
-          <span className="text-xs text-muted-foreground">Unsaved changes</span>
-          {actions}
-        </div>
+        <SaveBar label="Unsaved changes">{actions}</SaveBar>
       )}
     </div>
   )

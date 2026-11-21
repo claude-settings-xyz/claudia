@@ -39,13 +39,33 @@ func (p Paths) Projects(saved []string) ([]Project, error) {
 		byPath[path] = Project{Path: path, Saved: true}
 	}
 
-	projects := make([]Project, 0, len(byPath))
+	// The same folder can be listed under a symlink and under its real path.
+	// Keep one, with the shorter path, which is usually the one people type.
+	byReal := map[string]Project{}
 	for path, project := range byPath {
 		if _, err := p.ProjectDir(path); err != nil {
 			continue
 		}
-		project.Name = filepath.Base(path)
-		project.lastUsed = p.lastUsed(path)
+		real, err := filepath.EvalSymlinks(path)
+		if err != nil {
+			real = path
+		}
+		if other, ok := byReal[real]; ok && len(other.Path) <= len(path) {
+			other.Saved = other.Saved || project.Saved
+			byReal[real] = other
+			continue
+		}
+		project.Saved = project.Saved || byReal[real].Saved
+		byReal[real] = project
+	}
+
+	projects := make([]Project, 0, len(byReal))
+	for _, project := range byReal {
+		project.Name = filepath.Base(project.Path)
+		project.lastUsed = p.lastUsed(project.Path)
+		if real := p.lastUsedReal(project.Path); real.After(project.lastUsed) {
+			project.lastUsed = real
+		}
 		projects = append(projects, project)
 	}
 	slices.SortFunc(projects, func(a, b Project) int {
@@ -70,6 +90,14 @@ func hasConfig(dir string) bool {
 // Claude Code stores the sessions of a folder in a directory named after its
 // path, with every character other than a letter or digit replaced by "-".
 var sessionDirName = regexp.MustCompile(`[^a-zA-Z0-9]`)
+
+// lastUsedReal also checks the sessions recorded under the real path of dir.
+func (p Paths) lastUsedReal(dir string) time.Time {
+	if real, err := filepath.EvalSymlinks(dir); err == nil && real != dir {
+		return p.lastUsed(real)
+	}
+	return time.Time{}
+}
 
 // lastUsed returns the time of the newest Claude Code session in dir.
 func (p Paths) lastUsed(dir string) time.Time {

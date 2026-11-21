@@ -125,6 +125,11 @@ func (l *Loader) writeCache(key string, result Result) {
 	os.WriteFile(filepath.Join(l.cacheDir, key+".json"), data, 0o644)
 }
 
+// Executables lists the Claude Code executables on this computer, most likely first.
+func Executables() []string {
+	return candidates()
+}
+
 // candidates lists Claude Code executables, most likely first. Apps started from
 // the Dock or Start menu often have a short PATH, so common install folders are
 // checked too.

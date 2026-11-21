@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Brain, FileText, Globe, Puzzle, SlidersHorizontal, Sparkles } from 'lucide-react'
+import { Brain, FileText, Globe, Puzzle, Server, SlidersHorizontal, Sparkles } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
@@ -9,6 +9,7 @@ import { FileEditor } from '@/files/file-editor'
 import { queries } from '@/lib/api'
 import { navigate, shortPath, useLocation, type Tab } from '@/lib/location'
 import { parseSettings } from '@/lib/settings'
+import { MCPPanel } from '@/mcp/mcp-panel'
 import { MemoryPanel } from '@/memory/memory-panel'
 import { PluginsPanel } from '@/plugins/plugins-panel'
 import { AppSidebar } from '@/projects/app-sidebar'
@@ -20,6 +21,7 @@ export default function App() {
   const health = useQuery(queries.health())
   const skills = useQuery(queries.skills(dir))
   const memory = useQuery(queries.memory(dir))
+  const mcp = useQuery(queries.mcp(dir))
   const settings = useQuery(queries.file({ dir, kind: 'settings' }))
   const name = dir ? (dir.split(/[\\/]/).filter(Boolean).pop() ?? dir) : 'Global'
   const pluginsOn = Object.values((settings.data && parseSettings(settings.data)?.enabledPlugins) ?? {}).filter(
@@ -69,6 +71,12 @@ export default function App() {
                 label="Memory"
                 count={memory.data?.notes.filter((note) => !note.index).length}
               />
+              <TabTrigger
+                value="mcp"
+                icon={<Server />}
+                label="MCP"
+                count={mcp.data?.filter((server) => (dir ? server.scope !== 'user' : true)).length}
+              />
               <TabTrigger value="skills" icon={<Sparkles />} label="Skills" count={skills.data?.length} />
               <TabTrigger value="plugins" icon={<Puzzle />} label="Plugins" count={pluginsOn} />
             </TabsList>
@@ -82,6 +90,9 @@ export default function App() {
           </TabsContent>
           <TabsContent value="memory" keepMounted className={panelClass}>
             <MemoryPanel dir={dir} />
+          </TabsContent>
+          <TabsContent value="mcp" keepMounted className={panelClass}>
+            <MCPPanel dir={dir} />
           </TabsContent>
           <TabsContent value="skills" keepMounted className={panelClass}>
             <SkillsPanel dir={dir} />

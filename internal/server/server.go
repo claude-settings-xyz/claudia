@@ -29,6 +29,7 @@ type Server struct {
 	version    string
 	pickFolder func(context.Context) (string, error)
 	picking    sync.Mutex
+	cli        sync.Mutex
 }
 
 func New(paths claude.Paths, version string) (*Server, error) {
@@ -58,6 +59,9 @@ func (s *Server) Handler(port string, ui http.Handler) http.Handler {
 	mux.HandleFunc("PUT /api/files", s.writeFile)
 	mux.HandleFunc("DELETE /api/files", s.deleteFile)
 	mux.HandleFunc("GET /api/memory", s.listMemory)
+	mux.HandleFunc("GET /api/mcp", s.listMCP)
+	mux.HandleFunc("PUT /api/mcp", s.saveMCP)
+	mux.HandleFunc("DELETE /api/mcp", s.deleteMCP)
 	mux.HandleFunc("GET /api/plugins", s.listPlugins)
 	mux.HandleFunc("GET /api/skills", s.listSkills)
 	mux.HandleFunc("GET /api/schema", s.settingsSchema)
@@ -247,6 +251,7 @@ func writeError(w http.ResponseWriter, err error) {
 		errors.Is(err, claude.ErrGlobalDir),
 		errors.Is(err, claude.ErrBadSkillName),
 		errors.Is(err, claude.ErrBadNoteName),
+		errors.Is(err, errMCPRequest),
 		errors.Is(err, claude.ErrUnknownKind):
 		status = http.StatusBadRequest
 	case errors.Is(err, fs.ErrNotExist):

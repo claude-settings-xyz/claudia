@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { Sparkles } from 'lucide-react'
+import { Plus, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FileEditor } from '@/files/file-editor'
@@ -13,7 +14,7 @@ import { parseSettings, setPath, useUpdateSettings, type SkillVisibility } from 
 import { EmptyState } from '@/components/empty-state'
 import { LetterTile } from '@/components/tiles'
 import { cn } from '@/lib/ui'
-import { NewSkillDialog } from '@/skills/new-skill-dialog'
+import { NewSkillForm } from '@/skills/new-skill-form'
 import { VisibilitySelect, visibilities } from '@/skills/visibility-select'
 
 // A project shows its own skills and the global ones. dir is where the skill lives.
@@ -27,6 +28,7 @@ export function SkillsPanel({ dir }: { dir: string }) {
   const update = useUpdateSettings(dir)
   const [selected, setSelected] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
+  const [creating, setCreating] = useState(false)
 
   if (own.isPending || global.isPending || scopeFile.isPending || globalFile.isPending) {
     return <Skeleton className="h-64" />
@@ -61,6 +63,7 @@ export function SkillsPanel({ dir }: { dir: string }) {
 
   function select(entry: Entry) {
     if (current && !confirmDiscard([fileKey(skillRef(current))])) return
+    setCreating(false)
     setSelected(entryKey(entry))
   }
 
@@ -84,10 +87,16 @@ export function SkillsPanel({ dir }: { dir: string }) {
             placeholder="Filter skills"
             aria-label="Filter skills"
           />
-          <NewSkillDialog
-            dir={dir}
-            onCreated={(name) => setSelected(entryKey({ name, dir }))}
-          />
+          <Button
+            size="icon"
+            variant="outline"
+            className="shrink-0"
+            title="New skill"
+            aria-label="New skill"
+            onClick={() => setCreating(true)}
+          >
+            <Plus />
+          </Button>
         </div>
 
         <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
@@ -115,7 +124,16 @@ export function SkillsPanel({ dir }: { dir: string }) {
       </aside>
 
       <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
-        {current ? (
+        {creating ? (
+          <NewSkillForm
+            dir={dir}
+            onCreated={(name, created) => {
+              setCreating(false)
+              setSelected(entryKey({ name, dir: created }))
+            }}
+            onCancel={() => setCreating(false)}
+          />
+        ) : current ? (
           <>
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="font-heading text-lg font-semibold">/{current.name}</h2>
@@ -133,7 +151,10 @@ export function SkillsPanel({ dir }: { dir: string }) {
           </>
         ) : (
           <EmptyState icon={<Sparkles />} title="No skills yet">
-            Create one with the + button.
+            <Button onClick={() => setCreating(true)}>
+              <Plus />
+              Add a skill
+            </Button>
           </EmptyState>
         )}
       </section>

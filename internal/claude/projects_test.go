@@ -79,3 +79,25 @@ func session(t *testing.T, paths Paths, dir string, at time.Time) {
 	touch(t, file)
 	os.Chtimes(file, at, at)
 }
+
+func TestProjectsMergeSymlinks(t *testing.T) {
+	root := t.TempDir()
+	paths := Paths{ConfigDir: filepath.Join(root, "config"), StateFile: filepath.Join(root, ".claude.json")}
+	real := mkdir(t, root, "real")
+	touch(t, filepath.Join(real, "CLAUDE.md"))
+	link := filepath.Join(root, "l")
+	if err := os.Symlink(real, link); err != nil {
+		t.Skip("symlinks not supported:", err)
+	}
+
+	data, _ := json.Marshal(map[string]any{"projects": map[string]any{real: map[string]any{}, link: map[string]any{}}})
+	os.WriteFile(paths.StateFile, data, 0o644)
+
+	projects, err := paths.Projects(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(projects) != 1 || projects[0].Path != link {
+		t.Fatalf("got %+v", projects)
+	}
+}

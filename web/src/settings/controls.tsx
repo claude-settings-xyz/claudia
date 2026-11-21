@@ -303,7 +303,7 @@ function OptionSelect({
   )
 }
 
-function ListControl({
+export function ListControl({
   items,
   options,
   onChange,
@@ -378,7 +378,7 @@ function ListControl({
   )
 }
 
-function MapControl({
+export function MapControl({
   entries,
   onChange,
   label,

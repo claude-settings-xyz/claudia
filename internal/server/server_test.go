@@ -86,3 +86,14 @@ func TestSelectFolder(t *testing.T) {
 	}
 	close(release)
 }
+
+func TestWithoutSession(t *testing.T) {
+	env := withoutSession([]string{
+		"PATH=/bin", "CLAUDECODE=1", "CLAUDE_CODE_SESSION_ID=x", "CLAUDE_CODE_ENTRYPOINT=cli",
+		"CLAUDE_CONFIG_DIR=/c", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+	})
+	want := "PATH=/bin CLAUDE_CONFIG_DIR=/c CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1"
+	if got := strings.Join(env, " "); got != want {
+		t.Errorf("got %q", got)
+	}
+}

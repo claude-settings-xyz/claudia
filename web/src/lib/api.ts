@@ -20,6 +20,10 @@ export type Install = { scope: string; projectPath?: string; version?: string }
 
 export type Skill = { name: string; description: string; path: string }
 
+// user: every folder. local: one folder, only you. project: .mcp.json, shared.
+export type MCPScope = 'user' | 'local' | 'project'
+export type MCPServer = { name: string; scope: MCPScope; config: Record<string, unknown> }
+
 // Claude's auto memory. index is true for MEMORY.md.
 export type Memory = { enabled: boolean; notes: { name: string; index: boolean }[] }
 
@@ -93,6 +97,10 @@ export const api = {
     request<Project>('/api/projects', { method: 'POST', body: JSON.stringify({ path }) }),
   // Opens the system folder dialog. The path is empty when it is canceled.
   pickFolder: () => request<{ path: string }>('/api/pick-folder', { method: 'POST' }),
+  saveMCP: (body: { dir: string; scope: MCPScope; name: string; config: object; previous?: MCPServer }) =>
+    request<void>('/api/mcp', { method: 'PUT', body: JSON.stringify(body) }),
+  deleteMCP: (dir: string, { scope, name }: MCPServer) =>
+    request<void>(`/api/mcp?${new URLSearchParams({ dir, scope, name })}`, { method: 'DELETE' }),
   deleteFile: (ref: FileRef) => request<void>(fileURL(ref), { method: 'DELETE' }),
   removeProject: (path: string) =>
     request<void>(`/api/projects?${new URLSearchParams({ path })}`, { method: 'DELETE' }),
@@ -119,6 +127,11 @@ export const queries = {
     queryOptions({
       queryKey: ['file', ref.dir, ref.kind, ref.name ?? ''],
       queryFn: () => request<ConfigFile>(fileURL(ref)),
+    }),
+  mcp: (dir: string) =>
+    queryOptions({
+      queryKey: ['mcp', dir],
+      queryFn: () => request<MCPServer[]>(`/api/mcp${scopeQuery(dir)}`),
     }),
   memory: (dir: string) =>
     queryOptions({

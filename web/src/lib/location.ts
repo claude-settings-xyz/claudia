@@ -4,11 +4,11 @@ import type { FileRef } from '@/lib/api'
 
 // The selected folder and tab live in the URL, so reloads and bookmarks keep them.
 
-export type Tab = 'settings' | 'claude-md' | 'memory' | 'skills' | 'plugins'
+export type Tab = 'settings' | 'claude-md' | 'memory' | 'mcp' | 'skills' | 'plugins'
 
 export type Location = { dir: string; tab: Tab }
 
-const tabs: Tab[] = ['settings', 'claude-md', 'memory', 'skills', 'plugins']
+const tabs: Tab[] = ['settings', 'claude-md', 'memory', 'mcp', 'skills', 'plugins']
 
 function subscribe(onChange: () => void) {
   window.addEventListener('popstate', onChange)
