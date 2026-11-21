@@ -1,0 +1,34 @@
+---
+title: Introduction
+description: What Claudia is and how it works.
+---
+
+Claudia helps you manage your Claude Code configuration. You can edit `settings.json`, `CLAUDE.md`, skills and plugins for all your projects at once, or for one folder.
+
+## How it works
+
+Claudia is a single Go binary.
+
+- When it starts, it adds an icon to the system tray.
+- The tray menu has two items: **Open** and **Quit**.
+- **Open** shows the interface in your browser at `http://127.0.0.1:7377`.
+- The server only listens on localhost. Other computers on your network cannot reach it.
+
+Claudia keeps running in the tray until you quit it. You can close the browser tab at any time and open it again from the tray.
+
+## What you can manage
+
+- Global settings and instructions, in `~/.claude`. You change settings with a form or as JSON.
+- Project settings and instructions, in any project folder.
+- The notes that Claude saves in its memory for each folder.
+- Skills, and which ones Claude sees, globally or for one project.
+- Which plugins are on or off, globally or for one project.
+
+<Cards>
+  <Card title="Installation" href="/docs/installation" />
+  <Card title="Scopes and files" href="/docs/scopes" />
+  <Card title="Settings editor" href="/docs/settings" />
+  <Card title="Memory" href="/docs/memory" />
+  <Card title="Skills" href="/docs/skills" />
+  <Card title="Plugins" href="/docs/plugins" />
+</Cards>

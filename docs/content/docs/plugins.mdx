@@ -1,0 +1,39 @@
+---
+title: Plugins
+description: Turn plugins on or off, globally or for one project.
+---
+
+## Which plugins Claudia shows
+
+Claudia lists two kinds of plugins:
+
+- Installed plugins, from `~/.claude/plugins/installed_plugins.json`.
+- Plugins from the marketplaces that Claude Code knows about.
+
+By default, Claudia shows installed plugins and plugins that your settings mention. Choose **All** to see every plugin from your marketplaces. Use the search field to find a plugin by name or description.
+
+## Global scope
+
+Each plugin has a switch. When you turn a plugin on or off, Claudia writes the `enabledPlugins` key in `~/.claude/settings.json`.
+
+## Project scope
+
+Each plugin has three options:
+
+| Option  | What Claudia writes to `<folder>/.claude/settings.json` |
+| ------- | ------------------------------------------------------- |
+| Inherit | Removes the plugin from `enabledPlugins`.               |
+| On      | Sets the plugin to `true` in `enabledPlugins`.          |
+| Off     | Sets the plugin to `false` in `enabledPlugins`.         |
+
+With **Inherit**, the project uses the global value.
+
+## Install and update
+
+Claudia does not install or update plugins. To do that, use Claude Code:
+
+```bash
+claude plugin install <plugin>@<marketplace>
+```
+
+You can also use the `/plugin` command inside Claude Code.

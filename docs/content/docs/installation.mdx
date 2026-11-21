@@ -1,0 +1,58 @@
+---
+title: Installation
+description: Build Claudia from source and run it.
+---
+
+## Requirements
+
+- Go 1.26 or later
+- Node.js 24 or later
+
+## Build
+
+```bash
+make build
+```
+
+This builds the web interface first. Then it builds the binary into `bin/claudia`. The web interface is embedded in the binary, so you only need that one file.
+
+## Run
+
+```bash
+./bin/claudia
+```
+
+Claudia adds its icon to the tray and opens the interface in your browser.
+
+If Claudia is already running, a second launch does not start a new copy. It opens the browser for the running instance.
+
+### Flags
+
+| Flag       | Default | Description                                  |
+| ---------- | ------- | -------------------------------------------- |
+| `-port`    | `7377`  | Port for the local server.                   |
+| `-no-open` | `false` | Do not open the browser when Claudia starts. |
+
+## Development
+
+```bash
+make dev
+```
+
+This starts the Go server on port 7377 and the Vite dev server on port 5173. Open http://localhost:5173. Vite sends `/api` requests to the Go server.
+
+The `dev` build tag skips the embedded web files, so you do not need to build the web interface first.
+
+## Release builds
+
+```bash
+make release
+```
+
+This builds binaries for macOS, Windows and Linux, on both amd64 and arm64, into `bin/`. Run it on a Mac, because the macOS tray code needs cgo.
+
+## Platform notes
+
+- **macOS**: the icon shows in the menu bar. Run `make app` to build `bin/Claudia.app`. It has no Dock icon. To start Claudia when you log in, add it in System Settings > General > Login Items.
+- **Windows**: the icon shows in the notification area. The binary is built with `-H=windowsgui`, so no console window opens.
+- **Linux**: you need a tray that supports StatusNotifierItem. On GNOME, install the AppIndicator extension.

@@ -1,0 +1,38 @@
+---
+title: Skills
+description: Write skills and choose which ones Claude sees, globally or for one project.
+---
+
+A skill is a folder with a `SKILL.md` file. Claude Code reads its name and description, and loads the instructions when they are useful. You can also run a skill yourself as `/name`.
+
+## Where skills live
+
+| Scope   | Folder                          |
+| ------- | ------------------------------- |
+| Global  | `~/.claude/skills/<name>/`      |
+| Project | `<folder>/.claude/skills/<name>/` |
+
+The name of the folder is the name of the skill. In a project, the **Skills** tab shows the skills of the project first, then your global skills.
+
+## Edit a skill
+
+Select a skill to edit its `SKILL.md`. Saving works the same as for other files. If the file changed on disk, Claudia asks before it saves.
+
+## Create a skill
+
+Choose the **+** button next to the filter, then enter a name and a description. The name can contain lowercase letters, numbers and hyphens. Claudia creates `SKILL.md` with the frontmatter filled in.
+
+Claudia does not delete skills. To remove one, delete its folder.
+
+## Visibility
+
+Claudia writes your choice to `skillOverrides` in the `settings.json` of the scope.
+
+| Option          | What it does                                                   |
+| --------------- | -------------------------------------------------------------- |
+| On              | Claude can use the skill, and you can run it as a command.     |
+| Name only       | Claude sees the name of the skill but not its description.     |
+| Only as command | Claude does not see the skill. You can still run it as a command. |
+| Off             | Claude does not see the skill, and you cannot run it.          |
+
+In a project, **Inherit** removes the override, so the global choice applies. This way you can turn on a global skill for one project only, or turn it off there.

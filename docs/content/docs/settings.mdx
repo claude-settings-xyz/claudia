@@ -1,0 +1,32 @@
+---
+title: Settings editor
+description: Change Claude Code settings with a form, or edit the JSON directly.
+---
+
+The **Settings** tab opens a form for the selected file. Choose **JSON** to edit the file as text instead.
+
+## Where the list of settings comes from
+
+Claudia does not ship its own list of settings. It reads the settings schema from the Claude Code that is installed on your computer, so the form always matches the version that reads your files. After you update Claude Code, Claudia reads the new schema the next time you open the tab.
+
+To find Claude Code, Claudia checks `claude` on your `PATH`, then `~/.local/bin/claude` and the other usual install folders. It caches the schema for each Claude Code version.
+
+If Claudia cannot read the schema, the form shows an error, and you can still edit the file as JSON.
+
+## How the form works
+
+- **In this file** lists the settings that the file already contains. **More settings** lists the others in alphabetical order. When one of the two is empty, the form shows a single list without titles.
+- In a project with both `settings.json` and `settings.local.json`, choose **Shared** or **Local**. With only one of them, Claudia edits that file. To create the other one, use the **⋯** menu.
+- Switches and lists save as soon as you change them. Text fields save when you press Enter or leave the field.
+- Settings that are not set take one line. Choose **Edit JSON**, **Add entry** or **Show settings** to open the larger editors.
+- To remove a setting from the file, point at it and choose **Remove**. Claude Code then uses its default or the value from another scope.
+- The refresh button next to **Visual** and **JSON** reads the files and the schema again, for example after Claude Code changed them.
+- Some settings have no simple form, such as `hooks`. You edit those as JSON in place.
+- Settings that only work when an administrator deploys them are grouped under **Organization settings**.
+- Settings that Claude Code ignores in settings files are not shown.
+
+Plugins and skill visibility are not in this form. They have their own tabs.
+
+## Saving
+
+The form reads the file again before each change, so it keeps changes that Claude Code made in the meantime. It writes the file with two-space indents, like Claude Code does.
