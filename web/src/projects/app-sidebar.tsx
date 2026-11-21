@@ -52,7 +52,7 @@ export function AppSidebar({ current, tab }: { current: string; tab: Tab }) {
             onClick={toggleSidebar}
             title="Hide sidebar (⌘B)"
             aria-label="Hide sidebar"
-            className="flex h-9 items-center gap-2 px-2"
+            className="flex h-9 items-center gap-2 rounded-xl px-2 transition-colors hover:bg-sidebar-accent"
           >
             <Logo className="size-5" />
             <span className="font-heading text-sm font-bold tracking-tight">claudia</span>
