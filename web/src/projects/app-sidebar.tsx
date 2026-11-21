@@ -75,9 +75,9 @@ function Projects({ current }: { current: string }) {
   const visible = (projects.data ?? []).filter((project) => project.path.toLowerCase().includes(query))
 
   return (
-    // Until you point at it, the background is half way to the header color and the list is dim.
-    <SidebarGroup className="group/projects min-h-0 flex-1 bg-[color-mix(in_oklab,var(--sidebar)_50%,var(--background))] transition-colors duration-150 focus-within:bg-sidebar hover:bg-sidebar">
-      <SidebarGroupContent className="flex min-h-0 flex-1 flex-col gap-2 opacity-70 transition-opacity duration-150 group-focus-within/projects:opacity-100 group-hover/projects:opacity-100">
+    // Until you point at it, the background is close to the header color and the list is dim.
+    <SidebarGroup className="group/projects min-h-0 flex-1 bg-[color-mix(in_oklab,var(--sidebar)_40%,var(--background))] transition-colors duration-150 focus-within:bg-sidebar hover:bg-sidebar">
+      <SidebarGroupContent className="flex min-h-0 flex-1 flex-col gap-2 opacity-75 transition-opacity duration-150 group-focus-within/projects:opacity-100 group-hover/projects:opacity-100">
         <div className="flex items-center gap-2">
           <SidebarInput
             value={filter}
