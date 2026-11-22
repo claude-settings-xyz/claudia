@@ -1,4 +1,5 @@
-VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+# Raise it in the VERSION file before you run the Release workflow.
+VERSION ?= $(shell cat VERSION)
 LDFLAGS := -s -w -X main.version=$(VERSION)
 
 .PHONY: build web app release dev dev-go dev-web docs settings-schema test clean

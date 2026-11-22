@@ -51,7 +51,7 @@ You need Go 1.26 or later and Node.js 24 or later.
 | Workflow | What it does |
 | -------- | ------------ |
 | [CI](.github/workflows/ci.yml) | Builds the web interface, runs `go vet`, `go test` and the web lint, and builds for Windows and Linux. |
-| [Release](.github/workflows/release.yml) | Runs when you push a tag such as `v0.1.0`. Builds the assets on macOS, because the macOS tray needs cgo, and publishes the release with `SHA256SUMS`. |
+| [Release](.github/workflows/release.yml) | Run it from the Actions tab. It builds the assets on macOS, because the macOS tray needs cgo, and makes a draft release named after the version in `VERSION`, with `SHA256SUMS`. Publish the draft on the Releases page, and GitHub creates the tag. |
 | [Docs](.github/workflows/docs.yml) | Builds the docs for pull requests, and publishes them to GitHub Pages from `main`. Set Pages > Source to GitHub Actions in the repository settings. |
 
 ## Security
