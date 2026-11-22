@@ -94,7 +94,6 @@ const list: Suggestion[] = [
     group: 'privacy',
     title: 'Send less data',
     benefit: 'Claude Code stops sending usage data and error reports.',
-    tradeoff: 'Anthropic gets fewer reports about the problems you run into.',
     changes: [set('env.DISABLE_TELEMETRY', '1'), set('env.DISABLE_ERROR_REPORTING', '1')],
   },
   {
