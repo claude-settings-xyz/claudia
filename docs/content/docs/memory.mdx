@@ -17,6 +17,11 @@ With no project selected, **Memory** shows the notes from sessions that you star
 
 Select a note to edit it. To delete a note, choose **Delete**. You cannot delete the index. After you delete a note, the index may still mention it until Claude updates the index.
 
-## Turn auto memory off
+## Turn auto memory on or off
 
 Set `autoMemoryEnabled` to off in **Configuration**, globally or for one project. **Memory** says when auto memory is off.
+
+To turn it back on, choose the button in **Memory**:
+
+- In a project, **Turn on for this project** sets `autoMemoryEnabled` to on in `.claude/settings.local.json`. That file wins over the shared and global settings, and only you use it.
+- In the global view, **Turn on auto memory** removes `autoMemoryEnabled` from `~/.claude/settings.json`, so auto memory is on again by default.

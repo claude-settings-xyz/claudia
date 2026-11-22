@@ -20,6 +20,7 @@ import { FileEditor } from '@/files/file-editor'
 import { api, queries, type FileRef, type Memory } from '@/lib/api'
 import { confirmDiscard, fileKey } from '@/lib/location'
 import { notify } from '@/lib/notify'
+import { setPath, useUpdateSettings } from '@/lib/settings'
 import { cn } from '@/lib/ui'
 
 type Note = Memory['notes'][number]
@@ -42,9 +43,14 @@ export function MemoryPanel({ dir, actions }: { dir: string; actions: Element | 
   if (notes.length === 0) {
     return (
       <EmptyState icon={<Brain />} title="No memories yet">
-        {enabled
-          ? 'Claude saves notes here as it learns about this folder.'
-          : 'Auto memory is off, so Claude does not save notes.'}
+        {enabled ? (
+          'Claude saves notes here as it learns about this folder.'
+        ) : (
+          <div className="flex flex-col items-center gap-4">
+            Auto memory is off, so Claude does not save notes.
+            <TurnOn dir={dir} />
+          </div>
+        )}
       </EmptyState>
     )
   }
@@ -63,7 +69,11 @@ export function MemoryPanel({ dir, actions }: { dir: string; actions: Element | 
         {(!dir || !enabled) && (
           <p className="px-3 text-xs text-muted-foreground">
             {!dir && 'From sessions started in your home folder. '}
-            {!enabled && 'Auto memory is off.'}
+            {!enabled && (
+              <>
+                Auto memory is off. <TurnOn dir={dir} variant="link" />
+              </>
+            )}
           </p>
         )}
         <ul className="-mx-1 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-1">
@@ -141,5 +151,32 @@ function DeleteNote({ dir, name, onDeleted }: { dir: string; name: string; onDel
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  )
+}
+
+// The most specific settings file wins. In a project, the local file turns
+// auto memory on for you only. Globally, removing the "off" brings back the default.
+function TurnOn({ dir, variant }: { dir: string; variant?: 'link' }) {
+  const client = useQueryClient()
+  const update = useUpdateSettings(dir, dir ? 'settings-local' : 'settings')
+  const label = dir ? 'Turn on for this project' : 'Turn on auto memory'
+
+  function turnOn() {
+    update.mutate((settings) => setPath(settings, ['autoMemoryEnabled'], dir ? true : undefined), {
+      onSuccess: () => client.invalidateQueries({ queryKey: ['memory'] }),
+    })
+  }
+
+  if (variant === 'link') {
+    return (
+      <button type="button" onClick={turnOn} disabled={update.isPending} className="text-link hover:underline">
+        {label}
+      </button>
+    )
+  }
+  return (
+    <Button onClick={turnOn} disabled={update.isPending}>
+      {update.isPending ? 'Turning on…' : label}
+    </Button>
   )
 }
