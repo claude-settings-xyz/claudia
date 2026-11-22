@@ -13,6 +13,10 @@ type Mode = 'browse' | 'json';
 const empty: Settings = { $schema: 'https://json.schemastore.org/claude-code-settings.json' };
 const format = (file: Settings) => JSON.stringify(file, null, 2) + '\n';
 
+// Keeps the file for the tab, so that it is still there after a visit to a setting page.
+const storageKey = 'settings.json';
+const remember = (text: string) => sessionStorage.setItem(storageKey, text);
+
 // One file, edited in two ways: setting by setting in Browse, or as text in JSON.
 // Links to #json open the JSON view, and links such as #settings-hooks open a group.
 export function Configuration({ categories, known }: { categories: Category[]; known: string[] }) {
@@ -21,6 +25,11 @@ export function Configuration({ categories, known }: { categories: Category[]; k
   const [file, setFile] = useState<Settings>(empty);
   const [text, setText] = useState(() => format(empty));
   const count = Object.keys(file).filter((key) => key !== '$schema').length;
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem(storageKey);
+    if (saved !== null) edit(saved);
+  }, []);
 
   useEffect(() => {
     const follow = () => {
@@ -52,11 +61,13 @@ export function Configuration({ categories, known }: { categories: Category[]; k
     const next = setAt(file, path, value);
     setFile(next);
     setText(format(next));
+    remember(format(next));
   }
 
   // Invalid text stays in the editor, and Browse keeps the last valid file.
   function edit(next: string) {
     setText(next);
+    remember(next);
     try {
       const parsed: unknown = next.trim() === '' ? {} : JSON.parse(next);
       if (isPlainObject(parsed)) setFile(parsed);
@@ -66,6 +77,7 @@ export function Configuration({ categories, known }: { categories: Category[]; k
   function reset() {
     setFile(empty);
     setText(format(empty));
+    remember(format(empty));
   }
 
   return (
