@@ -167,6 +167,8 @@ export function ClaudiaCard() {
                 alt="Claudia, with the settings of a project as a form: a text field, a list of choices and switches"
                 width={2400}
                 height={1520}
+                loading="lazy"
+                decoding="async"
                 className="block w-full"
               />
             </div>

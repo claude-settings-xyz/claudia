@@ -11,10 +11,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(basePath + '/', siteUrl),
   title: {
-    template: '%s | Claudia',
-    default: 'Claudia',
+    template: '%s | Claudia for Claude Code',
+    default: 'Claudia for Claude Code',
   },
   description: 'Manage your Claude Code settings, CLAUDE.md files, skills and plugins from the browser.',
+  applicationName: 'Claudia',
 };
 
 export default function Layout({ children }: LayoutProps<'/'>) {
