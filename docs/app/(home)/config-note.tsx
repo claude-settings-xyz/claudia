@@ -8,9 +8,9 @@ export function ConfigNote() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute -top-24 left-1/2 hidden -translate-x-[23px] items-start text-[#b4482a] select-none sm:flex dark:text-[#f5936a]"
+      className="pointer-events-none absolute -top-40 left-1/2 hidden -translate-x-[35px] items-start text-fd-foreground select-none sm:flex"
     >
-      <svg viewBox="0 0 120 90" className="h-[90px] w-[120px] shrink-0 overflow-visible">
+      <svg viewBox="0 0 120 90" className="h-[135px] w-[180px] shrink-0 overflow-visible">
         <path
           d="M112 14 C 84 2, 44 14, 23 68"
           fill="none"
@@ -27,7 +27,7 @@ export function ConfigNote() {
           strokeLinejoin="round"
         />
       </svg>
-      <p className={cn(handwriting.className, '-mt-2 -ml-1 -rotate-3 text-[1.7rem] leading-none whitespace-nowrap text-fd-foreground')}>
+      <p className={cn(handwriting.className, '-mt-1 -ml-2 -rotate-3 text-[1.9rem] leading-none whitespace-nowrap')}>
         Create or edit your existing configuration
       </p>
     </div>
