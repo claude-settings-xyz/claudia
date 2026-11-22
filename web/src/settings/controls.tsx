@@ -111,7 +111,7 @@ function Description({ text }: { text: string }) {
       <p
         ref={ref}
         className={cn(
-          'mt-1 text-sm text-dim transition-colors group-focus-within/head:text-muted-foreground group-hover/head:text-muted-foreground',
+          'mt-1 text-sm text-muted-foreground/60 transition-colors group-focus-within/head:text-muted-foreground group-hover/head:text-muted-foreground',
           !expanded && 'line-clamp-3',
         )}
       >
