@@ -88,9 +88,7 @@ export function ClaudiaCard() {
             <span className="text-white/55 line-through decoration-white/80 decoration-[3px]">JSON</span>
           </h2>
           <p className="max-w-xl text-lg text-white/85">
-            Claudia is a small tray app that shows your settings.json as a form, built from the Claude Code on your
-            computer. Use it for all your projects or for one, with CLAUDE.md, skills, MCP servers and plugins next to
-            it.
+            Edit your CLAUDE.md, settings.json, MCPs, plugins, skills and more. Quick and focused.
           </p>
         </div>
 
