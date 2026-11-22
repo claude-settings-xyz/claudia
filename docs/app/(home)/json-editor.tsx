@@ -32,29 +32,36 @@ export function JSONEditor({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]">
-      <div className="flex min-w-0 flex-col gap-2">
-        <Editor text={text} onText={onText} invalid={error !== undefined} />
-        <p
-          className={cn(
-            'flex items-center gap-1.5 px-1 text-sm',
-            error ? 'text-red-500' : 'text-fd-muted-foreground',
-          )}
-        >
-          {error ? <AlertTriangle className="size-4 shrink-0" /> : <CircleCheck className="size-4 shrink-0 text-emerald-500" />}
-          {error ?? `Valid JSON with ${count} ${count === 1 ? 'setting' : 'settings'}.`}
-        </p>
-        {unknown.length > 0 && (
-          <p className="px-1 text-sm text-amber-600 dark:text-amber-400">
-            Claude Code does not know {unknown.length === 1 ? 'this key' : 'these keys'}:{' '}
-            {unknown.map((key, index) => (
-              <span key={key}>
-                {index > 0 && ', '}
-                <code className="font-mono">{key}</code>
-              </span>
-            ))}
-            . Check the spelling.
-          </p>
+      {/* The box stretches to the height of the side column. */}
+      <div
+        className={cn(
+          'flex min-w-0 flex-col overflow-hidden rounded-xl border bg-fd-card focus-within:ring-2 focus-within:ring-fd-ring',
+          error && 'border-red-500',
         )}
+      >
+        <Editor text={text} onText={onText} />
+        <div className="flex flex-col gap-1 border-t px-5 py-3 text-sm">
+          <p className={cn('flex items-center gap-1.5', error ? 'text-red-500' : 'text-fd-muted-foreground')}>
+            {error ? (
+              <AlertTriangle className="size-4 shrink-0" />
+            ) : (
+              <CircleCheck className="size-4 shrink-0 text-emerald-500" />
+            )}
+            {error ?? `Valid JSON with ${count} ${count === 1 ? 'setting' : 'settings'}.`}
+          </p>
+          {unknown.length > 0 && (
+            <p className="text-amber-600 dark:text-amber-400">
+              Claude Code does not know {unknown.length === 1 ? 'this key' : 'these keys'}:{' '}
+              {unknown.map((key, index) => (
+                <span key={key}>
+                  {index > 0 && ', '}
+                  <code className="font-mono">{key}</code>
+                </span>
+              ))}
+              . Check the spelling.
+            </p>
+          )}
+        </div>
       </div>
 
       <aside className="flex min-w-0 flex-col gap-6 lg:sticky lg:top-20 lg:self-start">
@@ -94,20 +101,14 @@ function problemOf(text: string): string | undefined {
 }
 
 // A textarea over colored text. The textarea has clear text, so the colors show through.
-function Editor({ text, onText, invalid }: { text: string; onText: (text: string) => void; invalid: boolean }) {
+function Editor({ text, onText }: { text: string; onText: (text: string) => void }) {
   const colors = useRef<HTMLPreElement>(null);
   const shared = 'm-0 p-5 font-mono text-[13px] leading-relaxed whitespace-pre';
-  // Grows with the file, from 12 to 30 lines.
-  const lines = Math.min(Math.max(text.split('\n').length + 1, 12), 30);
+  // Grows with the file, from 10 to 30 lines.
+  const lines = Math.min(Math.max(text.split('\n').length + 1, 10), 30);
 
   return (
-    <div
-      style={{ height: `calc(${lines} * 13px * 1.625 + 2.5rem)` }}
-      className={cn(
-        'relative overflow-hidden rounded-xl border bg-fd-card focus-within:ring-2 focus-within:ring-fd-ring',
-        invalid && 'border-red-500',
-      )}
-    >
+    <div style={{ minHeight: `calc(${lines} * 13px * 1.625 + 2.5rem)` }} className="relative flex-1">
       <pre ref={colors} aria-hidden className={cn(shared, 'pointer-events-none absolute inset-0 overflow-hidden')}>
         {highlightJSON(text)}
         {'\n'}
