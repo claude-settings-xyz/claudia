@@ -15,7 +15,7 @@ The site is a [static export](https://nextjs.org/docs/app/guides/static-exports)
 | Path                      | What it is                                                          |
 | ------------------------- | ------------------------------------------------------------------- |
 | `content/docs`            | The pages, in MDX. `meta.json` sets their order.                     |
-| `app/(home)`              | The homepage: every setting of `settings.json`, the builder, and the Claudia card. |
+| `app/(home)`              | The homepage: every setting of `settings.json` with a control to set it, a JSON editor that copies and downloads the file, and the Claudia card. |
 | `app/(home)/categories.ts` | The groups of settings on the homepage, and the examples.          |
 | `app/(home)/settings-schema.json` | The settings schema of Claude Code. Run `make settings-schema` in the repository after you update Claude Code. |
 | `app/docs`                | The docs layout and pages.                                          |

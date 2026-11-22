@@ -1,16 +1,26 @@
 'use client';
 
 import { Search, X } from 'lucide-react';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { cn } from '@/lib/cn';
-import { JSONView } from './json-view';
-import type { Category, Setting } from './settings-data';
+import { type Change, SettingRow } from './controls';
+import type { Setting, Settings } from './fields';
+import type { Category } from './settings-data';
 
-export function SettingsBrowser({ categories }: { categories: Category[] }) {
+export function SettingsBrowser({
+  categories,
+  file,
+  onChange,
+}: {
+  categories: Category[];
+  file: Settings;
+  onChange: Change;
+}) {
   const [active, setActive] = useState(categories[0].id);
   const [query, setQuery] = useState('');
   const search = query.trim().toLowerCase();
   const current = categories.find((category) => category.id === active) ?? categories[0];
+  const isSet = (setting: Setting) => file[setting.key] !== undefined;
 
   const results = search
     ? categories.flatMap((category) =>
@@ -20,35 +30,56 @@ export function SettingsBrowser({ categories }: { categories: Category[] }) {
       )
     : [];
 
+  const row = (setting: Setting, category?: string) => (
+    <SettingRow
+      key={setting.key}
+      setting={setting}
+      path={[setting.key]}
+      value={file[setting.key]}
+      onChange={onChange}
+      category={category}
+    />
+  );
+
+  const inFile = current.settings.filter(isSet);
+  const others = current.settings.filter((setting) => !isSet(setting));
+
   return (
     <div className="flex flex-col gap-5">
       <div role="tablist" aria-label="Groups of settings" className="flex flex-wrap gap-1">
-          {categories.map((category) => {
-            const selected = !search && category.id === current.id;
-            return (
-              <button
-                key={category.id}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                onClick={() => {
-                  setActive(category.id);
-                  setQuery('');
-                }}
-                className={cn(
-                  'flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
-                  selected
-                    ? 'bg-fd-primary text-fd-primary-foreground'
-                    : 'text-fd-muted-foreground hover:bg-fd-accent hover:text-fd-accent-foreground',
-                )}
-              >
-                {category.label}
+        {categories.map((category) => {
+          const selected = !search && category.id === current.id;
+          const set = category.settings.filter(isSet).length;
+          return (
+            <button
+              key={category.id}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              onClick={() => {
+                setActive(category.id);
+                setQuery('');
+              }}
+              className={cn(
+                'flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+                selected
+                  ? 'bg-fd-primary text-fd-primary-foreground'
+                  : 'text-fd-muted-foreground hover:bg-fd-accent hover:text-fd-accent-foreground',
+              )}
+            >
+              {category.label}
+              {set > 0 ? (
+                <span className="rounded-full bg-[#d9623f] px-1.5 text-[11px] leading-4 font-semibold text-white tabular-nums">
+                  {set}
+                </span>
+              ) : (
                 <span className={cn('text-xs tabular-nums', selected ? 'opacity-70' : 'opacity-60')}>
                   {category.settings.length}
                 </span>
-              </button>
-            );
-          })}
+              )}
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -81,57 +112,36 @@ export function SettingsBrowser({ categories }: { categories: Category[] }) {
         </label>
       </div>
 
-      <ul className="divide-y rounded-xl border bg-fd-card">
-        {(search ? results : current.settings.map((setting) => ({ setting, category: '' }))).map(({ setting, category }) => (
-          <SettingRow key={setting.key} setting={setting} category={category} />
-        ))}
-      </ul>
+      {search ? (
+        results.length > 0 && <Section>{results.map(({ setting, category }) => row(setting, category))}</Section>
+      ) : inFile.length > 0 ? (
+        <>
+          <Section title="In your file" count={inFile.length}>
+            {inFile.map((setting) => row(setting))}
+          </Section>
+          {others.length > 0 && <Section title="More settings">{others.map((setting) => row(setting))}</Section>}
+        </>
+      ) : (
+        <Section>{others.map((setting) => row(setting))}</Section>
+      )}
     </div>
   );
 }
 
-function SettingRow({ setting, category }: { setting: Setting; category: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const long = setting.description.length > 240;
-
+function Section({ title, count, children }: { title?: string; count?: number; children: ReactNode }) {
   return (
-    <li className={cn('grid gap-4 p-5', setting.example && 'md:grid-cols-[minmax(0,1fr)_minmax(0,20rem)]')}>
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <code className="font-mono text-sm font-semibold break-all">{setting.key}</code>
-          <span className="rounded-md border px-1.5 py-0.5 text-xs text-fd-muted-foreground">{setting.type}</span>
-          {category && <span className="text-xs text-fd-muted-foreground">in {category}</span>}
+    <section className="flex flex-col gap-3">
+      {title && (
+        <div className="flex items-center gap-2 px-1">
+          <h3 className="text-xs font-bold tracking-wider text-fd-muted-foreground uppercase">{title}</h3>
+          {count !== undefined && (
+            <span className="rounded-full bg-[#d9623f]/15 px-1.5 text-[11px] leading-4 font-semibold text-[#b4482a] tabular-nums dark:text-[#f5936a]">
+              {count}
+            </span>
+          )}
         </div>
-        {setting.description && (
-          <p className={cn('mt-2 text-sm leading-relaxed text-fd-muted-foreground', long && !expanded && 'line-clamp-3')}>
-            {setting.description}
-          </p>
-        )}
-        {long && (
-          <button
-            type="button"
-            onClick={() => setExpanded(!expanded)}
-            className="mt-1 text-xs font-medium text-fd-primary hover:underline"
-          >
-            {expanded ? 'Show less' : 'Show more'}
-          </button>
-        )}
-        {setting.values && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {setting.values.map((value) => (
-              <code key={value} className="rounded-md bg-fd-muted px-1.5 py-0.5 font-mono text-xs">
-                {value}
-              </code>
-            ))}
-          </div>
-        )}
-      </div>
-      {setting.example && (
-        <JSONView
-          text={`"${setting.key}": ${setting.example}`}
-          className="self-start rounded-lg border bg-fd-background px-3 py-2.5 text-xs"
-        />
       )}
-    </li>
+      <ul className="divide-y rounded-xl border bg-fd-card">{children}</ul>
+    </section>
   );
 }

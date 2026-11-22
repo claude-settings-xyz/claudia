@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { cn } from '@/lib/cn';
 
 const token = /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g;
 
@@ -35,12 +34,4 @@ export function highlightJSON(text: string): ReactNode[] {
   }
   if (last < text.length) parts.push(text.slice(last));
   return parts;
-}
-
-export function JSONView({ text, className }: { text: string; className?: string }) {
-  return (
-    <pre className={cn('overflow-x-auto font-mono text-[13px] leading-relaxed', className)}>
-      <code>{highlightJSON(text)}</code>
-    </pre>
-  );
 }

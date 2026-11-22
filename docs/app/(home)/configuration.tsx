@@ -1,21 +1,29 @@
 'use client';
 
-import { BookOpen, Wand2 } from 'lucide-react';
+import { BookOpen, Braces } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
-import { type BuilderOptions, SettingsBuilder } from './settings-builder';
+import { isPlainObject, setAt, type Settings } from './fields';
+import { JSONEditor } from './json-editor';
 import { SettingsBrowser } from './settings-browser';
 import type { Category } from './settings-data';
 
-type Mode = 'browse' | 'build';
+type Mode = 'browse' | 'json';
 
-// The settings, as a browser by group or as a builder. Links to #builder open the builder.
-export function Configuration({ categories, options }: { categories: Category[]; options: BuilderOptions }) {
+const empty: Settings = { $schema: 'https://json.schemastore.org/claude-code-settings.json' };
+const format = (file: Settings) => JSON.stringify(file, null, 2) + '\n';
+
+// One file, edited in two ways: setting by setting in Browse, or as text in JSON.
+// Links to #json open the JSON view.
+export function Configuration({ categories, known }: { categories: Category[]; known: string[] }) {
   const [mode, setMode] = useState<Mode>('browse');
+  const [file, setFile] = useState<Settings>(empty);
+  const [text, setText] = useState(() => format(empty));
+  const count = Object.keys(file).filter((key) => key !== '$schema').length;
 
   useEffect(() => {
     const follow = () => {
-      if (window.location.hash === '#builder') setMode('build');
+      if (window.location.hash === '#json') setMode('json');
       if (window.location.hash === '#settings') setMode('browse');
     };
     follow();
@@ -25,19 +33,39 @@ export function Configuration({ categories, options }: { categories: Category[];
 
   function choose(next: Mode) {
     setMode(next);
-    window.history.replaceState(null, '', next === 'build' ? '#builder' : '#settings');
+    window.history.replaceState(null, '', next === 'json' ? '#json' : '#settings');
+  }
+
+  function change(path: string[], value: unknown) {
+    const next = setAt(file, path, value);
+    setFile(next);
+    setText(format(next));
+  }
+
+  // Invalid text stays in the editor, and Browse keeps the last valid file.
+  function edit(next: string) {
+    setText(next);
+    try {
+      const parsed: unknown = next.trim() === '' ? {} : JSON.parse(next);
+      if (isPlainObject(parsed)) setFile(parsed);
+    } catch {}
+  }
+
+  function reset() {
+    setFile(empty);
+    setText(format(empty));
   }
 
   return (
     <section id="settings" className="scroll-mt-20">
-      <span id="builder" className="block scroll-mt-20" />
+      <span id="json" className="block scroll-mt-20" />
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-bold tracking-tight">Configuration</h2>
-        <div role="radiogroup" aria-label="View" className="flex rounded-lg border bg-fd-card p-1">
+        <div role="radiogroup" aria-label="View" className="flex self-start rounded-lg border bg-fd-card p-1">
           {(
             [
               { value: 'browse', label: 'Browse', icon: BookOpen },
-              { value: 'build', label: 'Build', icon: Wand2 },
+              { value: 'json', label: 'JSON', icon: Braces },
             ] as const
           ).map(({ value, label, icon: Icon }) => (
             <button
@@ -53,11 +81,20 @@ export function Configuration({ categories, options }: { categories: Category[];
             >
               <Icon className="size-4" />
               {label}
+              {value === 'json' && count > 0 && (
+                <span className="rounded-full bg-[#d9623f] px-1.5 text-[11px] leading-4 font-semibold text-white tabular-nums">
+                  {count}
+                </span>
+              )}
             </button>
           ))}
         </div>
       </div>
-      {mode === 'browse' ? <SettingsBrowser categories={categories} /> : <SettingsBuilder options={options} />}
+      {mode === 'browse' ? (
+        <SettingsBrowser categories={categories} file={file} onChange={change} />
+      ) : (
+        <JSONEditor text={text} file={file} known={known} onText={edit} onReset={reset} />
+      )}
     </section>
   );
 }

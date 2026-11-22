@@ -1,4 +1,5 @@
 import { categories, examples, type CategoryId } from './categories';
+import type { Field, Setting } from './fields';
 import snapshot from './settings-schema.json';
 
 type Schema = {
@@ -6,25 +7,19 @@ type Schema = {
   type?: string | string[];
   enum?: unknown[];
   const?: unknown;
+  default?: unknown;
+  minimum?: number;
+  maximum?: number;
   anyOf?: Schema[];
   oneOf?: Schema[];
+  items?: Schema;
   properties?: Record<string, Schema>;
-};
-
-export type Setting = {
-  key: string;
-  description: string;
-  // A short label, such as "boolean" or "list".
-  type: string;
-  // The allowed values, when the schema lists them.
-  values?: string[];
-  // JSON text of an example value, when there is a useful one.
-  example?: string;
+  additionalProperties?: Schema | boolean;
 };
 
 export type Category = { id: CategoryId; label: string; intro: string; settings: Setting[] };
 
-const properties = (snapshot.schema as Schema).properties ?? {};
+const properties = (snapshot.schema as unknown as Schema).properties ?? {};
 
 // The same checks as the Claudia app: internal settings are for programs that
 // start Claude Code, and managed-only settings need an administrator.
@@ -34,65 +29,77 @@ const managedOnly =
   /(?:^|[.(;]\s*)(?:read from )?managed settings only|only (?:honou?red|read)\b[^.]{0,40}?\b(?:from|in) (?:admin-controlled|managed|policy)|\((?:and )?set in (?:device )?managed settings|^when set in managed settings|^enterprise /i;
 const isManagedOnly = (schema: Schema) => managedOnly.test(schema.description ?? '');
 
-const typeLabels: Record<string, string> = {
-  boolean: 'boolean',
-  string: 'string',
-  integer: 'number',
-  number: 'number',
-  array: 'list',
-  object: 'object',
-};
-
-function options(schema: Schema): Schema[] {
-  return [...(schema.anyOf ?? []), ...(schema.oneOf ?? [])].filter((option) => option.type !== 'null');
+function withoutNull(schema: Schema): Schema {
+  if (!schema.anyOf) return schema;
+  const options = schema.anyOf.filter((option) => option.type !== 'null');
+  if (options.length === 1) return { ...options[0], description: schema.description ?? options[0].description };
+  return { ...schema, anyOf: options };
 }
 
-function describeType(schema: Schema): { type: string; values?: string[] } {
-  const values = [
-    ...(schema.enum ?? []),
-    ...options(schema).flatMap((option) => option.enum ?? (option.const !== undefined ? [option.const] : [])),
-  ].map(String);
-  const types = new Set(
-    [schema, ...options(schema)]
-      .flatMap((option) => (Array.isArray(option.type) ? option.type : option.type ? [option.type] : []))
-      .filter((type) => type !== 'null')
-      .map((type) => typeLabels[type] ?? type),
-  );
-  const type = values.length > 0 && types.size <= 1 ? 'one of' : [...types].join(' or ') || 'any';
-  return values.length > 0 ? { type, values } : { type };
+function strings(values: unknown[] | undefined): string[] {
+  return (values ?? []).filter((value): value is string => typeof value === 'string');
 }
 
-// A default that the description states, as in "(default: 30)".
+function fieldOf(schema: Schema): Field {
+  const s = withoutNull(schema);
+
+  if (s.anyOf) {
+    // For example the theme: a list of names, or any "custom:" string.
+    if (s.anyOf.every((option) => option.type === 'string')) {
+      return { kind: 'string', suggestions: s.anyOf.flatMap((option) => strings(option.enum)) };
+    }
+    return { kind: 'json' };
+  }
+
+  switch (s.type) {
+    case 'boolean':
+      return { kind: 'boolean' };
+    case 'string':
+      return s.enum ? { kind: 'enum', options: strings(s.enum) } : { kind: 'string', suggestions: [] };
+    case 'integer':
+    case 'number':
+      return { kind: 'number', integer: s.type === 'integer', min: s.minimum, max: s.maximum };
+    case 'array': {
+      const items = withoutNull(s.items ?? {});
+      return items.type === 'string' ? { kind: 'list', options: strings(items.enum) } : { kind: 'json' };
+    }
+    case 'object': {
+      if (s.properties && Object.keys(s.properties).length > 0) {
+        const settings = Object.entries(s.properties)
+          .filter(([, child]) => !isInternal(child))
+          .map(([key, child]) => toSetting(key, child));
+        return { kind: 'object', settings };
+      }
+      const values = s.additionalProperties;
+      if (typeof values === 'object' && withoutNull(values).type === 'string') return { kind: 'map' };
+      return { kind: 'json' };
+    }
+  }
+  return { kind: 'json' };
+}
+
+// A default that the description states, as in "(default: true)".
 function statedDefault(description: string) {
   return /default(?:s to|:)?\s*\(?(true|false|-?\d+(?:\.\d+)?)\b/i.exec(description)?.[1];
 }
 
-function exampleValue(key: string, schema: Schema, values: string[] | undefined): unknown {
-  if (key in examples) return examples[key];
-  if (values?.length) return values.find((value) => value !== 'default' && value !== 'auto') ?? values[0];
-
-  const description = schema.description ?? '';
-  const types = [schema, ...options(schema)].flatMap((option) => option.type ?? []);
-  if (types.includes('boolean')) {
-    // Show the change from the default: settings that are on by default get false.
-    const onByDefault = statedDefault(description) === 'true' || /when absent or true|^set to false|^when false/i.test(description);
-    return !onByDefault;
-  }
-  if (types.includes('integer') || types.includes('number')) return Number(statedDefault(description) ?? 1);
-  // An empty string, list or object teaches nothing.
+function fallbackOf(schema: Schema): boolean | undefined {
+  if (typeof schema.default === 'boolean') return schema.default;
+  const stated = statedDefault(schema.description ?? '');
+  if (stated === 'true' || /when absent or true|^set to false|^when false/i.test(schema.description ?? '')) return true;
+  if (stated === 'false') return false;
   return undefined;
 }
 
 function toSetting(key: string, schema: Schema): Setting {
-  const { type, values } = describeType(schema);
+  const field = fieldOf(schema);
   const description = (schema.description ?? '').replace(/^\(EAP\)\s*/, '');
-  const example = exampleValue(key, schema, values);
   return {
     key,
     description,
-    type,
-    values,
-    example: example === undefined ? undefined : JSON.stringify(example, null, 2),
+    field,
+    fallback: field.kind === 'boolean' ? fallbackOf(schema) : undefined,
+    example: key in examples ? JSON.stringify(examples[key], null, 2) : undefined,
   };
 }
 
@@ -126,19 +133,9 @@ export function getSettings() {
   }
 
   return {
-    version: snapshot.version,
     count: result.reduce((total, category) => total + category.settings.length, 0),
     categories: result.filter((category) => category.settings.length > 0),
-  };
-}
-
-// The values that the builder offers, from the schema, so that they stay current.
-export function getBuilderOptions() {
-  const enumOf = (schema: Schema | undefined) => (schema ? (describeType(schema).values ?? []) : []);
-  return {
-    effortLevels: enumOf(properties.effortLevel),
-    permissionModes: enumOf(properties.permissions?.properties?.defaultMode),
-    themes: enumOf(properties.theme),
-    updateChannels: enumOf(properties.autoUpdatesChannel),
+    // All keys that Claude Code knows, to find typos in a pasted file.
+    known: Object.keys(properties),
   };
 }

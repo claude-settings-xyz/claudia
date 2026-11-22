@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, BookOpen } from 'lucide-react';
+import { ArrowRight, Braces } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
 import { highlightJSON } from './json-view';
@@ -41,23 +41,23 @@ export function Hero({ count }: { count: number }) {
             </span>
           </h1>
           <p className="mt-6 max-w-xl text-lg text-pretty text-fd-muted-foreground">
-            See what each of the {count} Claude Code settings does, with an example. Or answer a few questions and get
-            your own settings.json.
+            See what each of the {count} Claude Code settings does, and set the ones you want. Then copy your
+            settings.json, or paste your own to check it.
           </p>
           <div className="mt-9 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             <a
-              href="#builder"
+              href="#settings"
               className="group flex items-center justify-center gap-2 rounded-xl bg-linear-to-b from-[#e0703f] to-[#b4482a] px-6 py-3 font-semibold text-white shadow-[0_12px_32px_-12px_rgba(217,98,63,0.9)] ring-1 ring-white/20 transition hover:brightness-110"
             >
               Build your settings.json
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </a>
             <a
-              href="#settings"
+              href="#json"
               className="flex items-center justify-center gap-2 rounded-xl border bg-fd-card/60 px-6 py-3 font-semibold backdrop-blur transition-colors hover:bg-fd-accent"
             >
-              <BookOpen className="size-4" />
-              Browse all settings
+              <Braces className="size-4" />
+              Check your settings.json
             </a>
           </div>
         </div>
