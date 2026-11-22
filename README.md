@@ -4,8 +4,6 @@
 
 A tray app that manages your Claude Code `settings.json`, `CLAUDE.md`, memory, MCP servers, skills, plugins and marketplaces, globally and for each project folder. The interface runs in your browser at http://127.0.0.1:7377.
 
-Website and docs: [claudesettings.xyz](https://claudesettings.xyz)
-
 ## Install
 
 ```bash
@@ -47,14 +45,6 @@ make settings-schema  # refresh the settings list of the docs homepage from your
 ```
 
 You need Go 1.26 or later and Node.js 24 or later.
-
-## Workflows
-
-| Workflow | What it does |
-| -------- | ------------ |
-| [CI](.github/workflows/ci.yml) | Builds the web interface, runs `go vet`, `go test` and the web lint, and builds for Windows and Linux. |
-| [Release](.github/workflows/release.yml) | Run it from the Actions tab. It builds the assets on macOS, because the macOS tray needs cgo, and makes a draft release named after the version in `VERSION`, with `SHA256SUMS`. Publish the draft on the Releases page, and GitHub creates the tag. |
-| [Docs](.github/workflows/docs.yml) | Builds the docs for pull requests, and publishes them to GitHub Pages from `main`. In the repository settings, set Pages > Source to GitHub Actions, and the custom domain to `claudesettings.xyz`. |
 
 ## Security
 
