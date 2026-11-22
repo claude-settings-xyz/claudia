@@ -151,13 +151,13 @@ export function SkillsPanel({ dir, actions }: { dir: string; actions: Element | 
               {dir && !current.dir && <ScopeBadge scope="global" />}
               <VisibilitySelect
                 value={dir ? scopeOverrides[current.name] : effective(current.name)}
-                locks={{ model: !current.modelInvocable, user: !current.userInvocable }}
+                locks={{ model: current.modelInvocable === false, user: current.userInvocable === false }}
                 inherited={dir ? { value: inherited(current.name), global: current.name in globalOverrides } : undefined}
                 disabled={!scopeSettings || update.isPending}
                 onChange={(value) => choose(current.name, value)}
               />
             </div>
-            {!current.modelInvocable && (
+            {current.modelInvocable === false && (
               <LockNotice
                 title="Only you can run this skill"
                 flag="disable-model-invocation: true"
@@ -167,7 +167,7 @@ export function SkillsPanel({ dir, actions }: { dir: string; actions: Element | 
                 onAction={() => removeLock(current, 'disable-model-invocation', 'Claude can use it now')}
               />
             )}
-            {!current.userInvocable && (
+            {current.userInvocable === false && (
               <LockNotice
                 title="Only Claude can use this skill"
                 flag="user-invocable: false"
@@ -239,19 +239,20 @@ function SkillList({
 }
 
 // The SKILL.md can lock a skill to one side. Off still wins, because it hides the skill from both.
+// Only an explicit false is a lock: older servers do not send the flags.
 function StateBadge({ entry, state }: { entry: Entry; state: SkillVisibility }) {
   const label =
     state === 'off'
       ? visibilities.off.label
-      : !entry.modelInvocable
+      : entry.modelInvocable === false
         ? visibilities['user-invocable-only'].label
-        : !entry.userInvocable
+        : entry.userInvocable === false
           ? 'Claude only'
           : state === 'on'
             ? null
             : visibilities[state].label
   if (!label) return null
-  const locked = state !== 'off' && (!entry.modelInvocable || !entry.userInvocable)
+  const locked = state !== 'off' && (entry.modelInvocable === false || entry.userInvocable === false)
   return (
     <Badge variant="outline" className="shrink-0" title={locked ? 'Set in its SKILL.md' : undefined}>
       {locked && <Lock data-icon="inline-start" />}
