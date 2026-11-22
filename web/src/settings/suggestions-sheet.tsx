@@ -77,7 +77,6 @@ export function SuggestionsButton({ settings, schema }: { settings: Settings; sc
               <Group
                 key={group.id}
                 title={group.label}
-                count={items.length}
                 action={
                   group.id === 'advanced' && (
                     <Button variant="ghost" size="xs" onClick={() => setShowAdvanced(!showAdvanced)}>
@@ -110,7 +109,6 @@ export function SuggestionsButton({ settings, schema }: { settings: Settings; sc
           {hidden.length > 0 && (
             <Group
               title="Dismissed"
-              count={hidden.length}
               action={
                 <Button variant="ghost" size="xs" onClick={() => setShowDismissed(!showDismissed)}>
                   {showDismissed ? 'Hide' : 'Show'}
@@ -134,14 +132,11 @@ export function SuggestionsButton({ settings, schema }: { settings: Settings; sc
 }
 
 // children is false while the group is collapsed.
-function Group({ title, count, action, children }: { title: string; count: number; action?: ReactNode; children: ReactNode }) {
+function Group({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center gap-2 px-1">
         <h3 className="text-xs font-bold tracking-wider text-dim uppercase">{title}</h3>
-        <span className="rounded-full bg-primary/15 px-1.5 text-[11px] leading-4 font-semibold text-link tabular-nums">
-          {count}
-        </span>
         {action}
       </div>
       {children && <div className="divide-y divide-border/60 rounded-2xl bg-card px-4 shadow-panel">{children}</div>}
