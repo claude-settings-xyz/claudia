@@ -10,6 +10,7 @@ import { queries, type JSONSchema, type Kind } from '@/lib/api'
 import { parseSettings, setPath, useUpdateSettings } from '@/lib/settings'
 import { SettingRow } from '@/settings/controls'
 import { isInternal, isManagedOnly } from '@/settings/fields'
+import { SuggestionsButton } from '@/settings/suggestions-sheet'
 
 // The Plugins and Skills tabs edit these.
 const hidden = new Set(['$schema', 'enabledPlugins', 'skillOverrides'])
@@ -82,13 +83,17 @@ export function SettingsForm({ dir, kind, toolbar, onShowJSON }: Props) {
     <div className="flex flex-col gap-8 pb-8">
       {toolbar &&
         createPortal(
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search settings"
-            aria-label="Search settings"
-            className="max-w-sm"
-          />,
+          <>
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search settings"
+              aria-label="Search settings"
+              className="max-w-sm"
+            />
+            {/* Suggestions are for how Claude Code behaves everywhere, so only the global file has them. */}
+            {dir === '' && kind === 'settings' && <SuggestionsButton settings={settings} schema={schema.data.schema} />}
+          </>,
           toolbar,
         )}
 
