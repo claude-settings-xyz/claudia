@@ -48,7 +48,7 @@ export function MarketplacesPanel() {
   }
 
   return (
-    <ul className="divide-y rounded-3xl bg-card shadow-panel">
+    <ul className="divide-y divide-border/60 rounded-3xl bg-card shadow-panel">
       {entries.map((entry) => (
         <Row key={entry.name} entry={entry} download={byName.get(entry.name)} />
       ))}

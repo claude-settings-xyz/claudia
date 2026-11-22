@@ -225,7 +225,7 @@ function ServerForm({ dir, actions, server, onSaved, onCancel, onDeleted }: Form
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto rounded-lg">
-        <div className="divide-y rounded-3xl bg-card px-5 shadow-panel">
+        <div className="divide-y divide-border/60 rounded-3xl bg-card px-5 shadow-panel">
           <FormRow label="Name">
             <Input
               value={name}

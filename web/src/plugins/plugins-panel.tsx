@@ -78,7 +78,7 @@ export function PluginsPanel({ dir }: { dir: string }) {
       {plugins.length === 0 ? (
         <EmptyState icon={<Puzzle />} title="No plugins found" />
       ) : (
-        <ul className="divide-y rounded-3xl bg-card px-5 shadow-panel">
+        <ul className="divide-y divide-border/60 rounded-3xl bg-card px-5 shadow-panel">
           {plugins.map((plugin) => (
             <li key={plugin.id} className="flex items-start gap-4 py-4">
               <div className="min-w-0 flex-1">
