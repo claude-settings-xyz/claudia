@@ -19,7 +19,7 @@ See the [installation docs](docs/content/docs/installation.mdx) for options and 
 | Path              | What it is                                                        |
 | ----------------- | ----------------------------------------------------------------- |
 | `main.go`         | Entry point: flags, single instance check, HTTP server, tray      |
-| `tray.go`         | Tray menu with Open and Quit                                      |
+| `tray.go`         | Tray menu with Open, GitHub and Quit                              |
 | `icon.go`         | Tray icon, drawn at startup                                       |
 | `internal/claude` | Reads and writes Claude Code files, lists projects, skills and plugins |
 | `internal/schema` | Reads the settings schema from the installed Claude Code          |
