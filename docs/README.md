@@ -1,45 +1,22 @@
 # docs
 
-This is a Next.js application generated with
-[Create Fumadocs](https://github.com/fuma-nama/fumadocs).
-
-Run development server:
+The Claudia landing page and docs, made with [Fumadocs](https://fumadocs.dev) and Next.js.
 
 ```bash
-npm run dev
-# or
-pnpm dev
-# or
-yarn dev
+npm run dev     # dev server on http://localhost:3000
+npm run build   # static site in out/
+npm run start   # serves out/ to check the build
 ```
 
-Open http://localhost:3000 with your browser to see the result.
+The site is a [static export](https://nextjs.org/docs/app/guides/static-exports), so any file host can serve `out/`. Search runs in the browser from an index that the build writes to `/api/search`. The Markdown of each page is at `/llms.mdx/docs/<page>.md`, and `/llms.txt` and `/llms-full.txt` list all pages.
 
-## Explore
+## Where things are
 
-In the project, you can see:
-
-- `lib/source.ts`: Code for content source adapter, [`loader()`](https://fumadocs.dev/docs/headless/source-api) provides the interface to access your content.
-- `lib/layout.shared.tsx`: Shared options for layouts, optional but preferred to keep.
-
-| Route                     | Description                                            |
-| ------------------------- | ------------------------------------------------------ |
-| `app/(home)`              | The route group for your landing page and other pages. |
-| `app/docs`                | The documentation layout and pages.                    |
-| `app/api/search/route.ts` | The Route Handler for search.                          |
-
-### Fumadocs MDX
-
-Collections are defined with the [Macro API](https://fumadocs.dev/docs/mdx/macro) in `lib/source.ts`.
-
-Read the [Introduction](https://fumadocs.dev/docs/mdx) for further details.
-
-## Learn More
-
-To learn more about Next.js and Fumadocs, take a look at the following
-resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js
-  features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [Fumadocs](https://fumadocs.dev) - learn about Fumadocs
+| Path                      | What it is                                                          |
+| ------------------------- | ------------------------------------------------------------------- |
+| `content/docs`            | The pages, in MDX. `meta.json` sets their order.                     |
+| `app/(home)`              | The landing page.                                                   |
+| `app/docs`                | The docs layout and pages.                                          |
+| `lib/shared.ts`           | The app name, the routes, and the GitHub repository for the links.  |
+| `lib/source.ts`           | Loads the pages, with the [Macro API](https://fumadocs.dev/docs/mdx/macro). |
+| `lib/layout.shared.tsx`   | Options for all layouts, such as the title and the GitHub link.     |

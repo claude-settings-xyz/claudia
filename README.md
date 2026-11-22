@@ -38,7 +38,7 @@ make dev      # Go API on :7377 and Vite on :5173
 make test     # go vet and go test
 make app      # bin/Claudia.app for macOS (menu bar only)
 make release  # release assets and checksums in bin/release
-make docs     # docs dev server
+make docs     # docs dev server. cd docs && npm run build writes the static site to docs/out
 ```
 
 You need Go 1.26 or later and Node.js 24 or later.
