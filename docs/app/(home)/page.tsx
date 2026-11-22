@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ClaudiaCard } from './claudia-card';
+import { ConfigNote } from './config-note';
 import { Configuration } from './configuration';
 import { Hero } from './hero';
 import { getSettings } from './settings-data';
@@ -17,7 +18,8 @@ export default function HomePage() {
     <main className="flex flex-1 flex-col gap-20 pb-24">
       <Hero count={count} />
 
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+      <div className="relative mx-auto w-full max-w-6xl px-4 sm:mt-10 sm:px-6">
+        <ConfigNote />
         <Configuration categories={categories} known={known} />
       </div>
 
