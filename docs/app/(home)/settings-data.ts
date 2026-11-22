@@ -30,6 +30,9 @@ const managedOnly =
   /(?:^|[.(;]\s*)(?:read from )?managed settings only|only (?:honou?red|read)\b[^.]{0,40}?\b(?:from|in) (?:admin-controlled|managed|policy)|\((?:and )?set in (?:device )?managed settings|^when set in managed settings|^enterprise /i;
 const isManagedOnly = (schema: Schema) => managedOnly.test(schema.description ?? '');
 
+export const isManagedKey = (key: string) => key in properties && isManagedOnly(properties[key]);
+export const claudeCodeVersion = snapshot.version;
+
 function withoutNull(schema: Schema): Schema {
   if (!schema.anyOf) return schema;
   const options = schema.anyOf.filter((option) => option.type !== 'null');
