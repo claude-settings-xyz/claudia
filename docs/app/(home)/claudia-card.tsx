@@ -88,7 +88,7 @@ export function ClaudiaCard() {
             <span className="text-white/55 line-through decoration-white/80 decoration-[3px]">JSON</span>
           </h2>
           <p className="max-w-xl text-lg text-white/85">
-            Edit your CLAUDE.md, settings.json, MCPs, plugins, skills and more. Quick and focused.
+            Edit your CLAUDE.md, settings.json, MCPs, plugins, skills and more. Quick and focused. Written in Go.
           </p>
         </div>
 
