@@ -14,26 +14,38 @@ const empty: Settings = { $schema: 'https://json.schemastore.org/claude-code-set
 const format = (file: Settings) => JSON.stringify(file, null, 2) + '\n';
 
 // One file, edited in two ways: setting by setting in Browse, or as text in JSON.
-// Links to #json open the JSON view.
+// Links to #json open the JSON view, and links such as #settings-hooks open a group.
 export function Configuration({ categories, known }: { categories: Category[]; known: string[] }) {
   const [mode, setMode] = useState<Mode>('browse');
+  const [tab, setTab] = useState<string>(categories[0].id);
   const [file, setFile] = useState<Settings>(empty);
   const [text, setText] = useState(() => format(empty));
   const count = Object.keys(file).filter((key) => key !== '$schema').length;
 
   useEffect(() => {
     const follow = () => {
-      if (window.location.hash === '#json') setMode('json');
-      if (window.location.hash === '#settings') setMode('browse');
+      const hash = window.location.hash;
+      if (hash === '#json') setMode('json');
+      if (hash === '#settings') setMode('browse');
+      const group = categories.find((category) => hash === `#settings-${category.id}`);
+      if (group) {
+        setMode('browse');
+        setTab(group.id);
+      }
     };
     follow();
     window.addEventListener('hashchange', follow);
     return () => window.removeEventListener('hashchange', follow);
-  }, []);
+  }, [categories]);
 
   function choose(next: Mode) {
     setMode(next);
-    window.history.replaceState(null, '', next === 'json' ? '#json' : '#settings');
+    window.history.replaceState(null, '', next === 'json' ? '#json' : `#settings-${tab}`);
+  }
+
+  function chooseTab(id: string) {
+    setTab(id);
+    window.history.replaceState(null, '', `#settings-${id}`);
   }
 
   function change(path: string[], value: unknown) {
@@ -59,6 +71,9 @@ export function Configuration({ categories, known }: { categories: Category[]; k
   return (
     <section id="settings" className="scroll-mt-20">
       <span id="json" className="block scroll-mt-20" />
+      {categories.map((category) => (
+        <span key={category.id} id={`settings-${category.id}`} className="block scroll-mt-20" />
+      ))}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-bold tracking-tight">Configuration</h2>
         <div role="radiogroup" aria-label="View" className="flex self-start rounded-lg border bg-fd-card p-1">
@@ -91,7 +106,7 @@ export function Configuration({ categories, known }: { categories: Category[]; k
         </div>
       </div>
       {mode === 'browse' ? (
-        <SettingsBrowser categories={categories} file={file} onChange={change} />
+        <SettingsBrowser categories={categories} active={tab} onActive={chooseTab} file={file} onChange={change} />
       ) : (
         <JSONEditor text={text} file={file} known={known} onText={edit} onReset={reset} />
       )}

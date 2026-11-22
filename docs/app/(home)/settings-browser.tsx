@@ -9,14 +9,17 @@ import type { Category } from './settings-data';
 
 export function SettingsBrowser({
   categories,
+  active,
+  onActive,
   file,
   onChange,
 }: {
   categories: Category[];
+  active: string;
+  onActive: (id: string) => void;
   file: Settings;
   onChange: Change;
 }) {
-  const [active, setActive] = useState(categories[0].id);
   const [query, setQuery] = useState('');
   const search = query.trim().toLowerCase();
   const current = categories.find((category) => category.id === active) ?? categories[0];
@@ -57,7 +60,7 @@ export function SettingsBrowser({
               role="tab"
               aria-selected={selected}
               onClick={() => {
-                setActive(category.id);
+                onActive(category.id);
                 setQuery('');
               }}
               className={cn(
