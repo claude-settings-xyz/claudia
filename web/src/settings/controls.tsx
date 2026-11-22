@@ -107,7 +107,7 @@ function Description({ text }: { text: string }) {
 
   return (
     <>
-      <p ref={ref} className={cn('mt-1 text-sm text-muted-foreground', !expanded && 'line-clamp-3')}>
+      <p ref={ref} className={cn('mt-1 font-mono text-sm text-muted-foreground', !expanded && 'line-clamp-3')}>
         {text}
       </p>
       {(clipped || expanded) && (
