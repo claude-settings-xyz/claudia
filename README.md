@@ -47,3 +47,7 @@ You need Go 1.26 or later and Node.js 24 or later.
 ## Security
 
 The server only listens on 127.0.0.1. It refuses requests with a different `Host` header, which blocks DNS rebinding. API requests must send an `X-Claudia` header. Browsers do not let other websites send that header, so they cannot change your files.
+
+## License
+
+[MIT](LICENSE)

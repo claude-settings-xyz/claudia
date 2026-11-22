@@ -58,7 +58,11 @@ export function Footer() {
 
       <div className="border-t">
         <p className="mx-auto w-full max-w-6xl px-6 py-6 text-xs text-fd-muted-foreground">
-          An open-source project. It is not made by or affiliated with{' '}
+          Open source under the{' '}
+          <a href={`${githubUrl}/blob/main/LICENSE`} className="underline-offset-4 hover:text-fd-foreground hover:underline">
+            MIT License
+          </a>
+          . It is not made by or affiliated with{' '}
           <a href="https://www.anthropic.com" className="underline-offset-4 hover:text-fd-foreground hover:underline">
             Anthropic
           </a>
