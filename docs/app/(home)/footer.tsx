@@ -1,24 +1,34 @@
+import { Download } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { githubUrl } from '@/lib/shared';
 import { source } from '@/lib/source';
+import { Logo } from './logo';
 import { getSettings } from './settings-data';
 
 // Links to every group of settings and every docs page, so that search engines find them all.
 export function Footer() {
-  const { categories, count } = getSettings();
+  const { categories } = getSettings();
   const docs = source.pageTree.children.flatMap((node) => (node.type === 'page' ? [node] : []));
 
   return (
     <footer className="border-t bg-fd-card/40">
       <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-x-6 gap-y-10 px-6 py-14 lg:grid-cols-[minmax(0,1.2fr)_repeat(4,minmax(0,1fr))]">
         <div className="col-span-2 flex flex-col gap-3 lg:col-span-1">
-          <Link href="/" className="font-mono text-lg font-semibold">
-            settings.json
-          </Link>
+          <a href="/#claudia" className="flex items-center gap-2.5 text-lg font-semibold">
+            <Logo className="size-7 rounded-[7px] drop-shadow-none ring-1 ring-fd-border" />
+            Claudia
+          </a>
           <p className="max-w-xs text-sm text-fd-muted-foreground">
-            All {count} Claude Code settings in plain English, with an editor that writes your settings.json.
+            Edit your CLAUDE.md, settings.json, MCPs, plugins, skills and more. Quick and focused. Written in Go.
           </p>
+          <a
+            href="/#claudia"
+            className="mt-2 flex items-center gap-2 self-start rounded-lg bg-linear-to-b from-[#e0703f] to-[#b4482a] px-4 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-white/20 transition hover:brightness-110"
+          >
+            <Download className="size-4" />
+            Download Claudia
+          </a>
           <p className="mt-auto max-w-xs pt-4 text-xs text-fd-muted-foreground">
             Open source under the{' '}
             <a href={`${githubUrl}/blob/main/LICENSE`} className="underline-offset-4 hover:text-fd-foreground hover:underline">

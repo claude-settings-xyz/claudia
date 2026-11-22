@@ -3,6 +3,7 @@
 import { Check, Copy, FolderTree, type LucideIcon, ToggleRight } from 'lucide-react';
 import { type CSSProperties, type ReactNode, useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
+import { Logo } from './logo';
 
 const unixCommand = 'curl -fsSL https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.sh | sh';
 const windowsCommand = 'irm https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.ps1 | iex';
@@ -209,15 +210,5 @@ function Callout({ icon: Icon, className, children }: { icon: LucideIcon; classN
       <Icon className="size-4" />
       {children}
     </div>
-  );
-}
-
-function Logo() {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden className="size-8 drop-shadow">
-      <rect width="64" height="64" rx="16" fill="#fff" />
-      <rect x="11" y="19.5" width="42" height="25" rx="12.5" fill="none" stroke="#b94e30" strokeWidth="4.5" />
-      <circle cx="41" cy="32" r="6.5" fill="#b94e30" />
-    </svg>
   );
 }
