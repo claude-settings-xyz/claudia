@@ -16,6 +16,7 @@ export function Configuration({ categories, options }: { categories: Category[];
   useEffect(() => {
     const follow = () => {
       if (window.location.hash === '#builder') setMode('build');
+      if (window.location.hash === '#settings') setMode('browse');
     };
     follow();
     window.addEventListener('hashchange', follow);
