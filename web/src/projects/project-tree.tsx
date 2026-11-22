@@ -88,7 +88,7 @@ function Row({
           // Selecting the open project again goes back to the global view.
           onClick={() => navigate({ dir: active ? '' : project.path })}
           title={active ? 'Back to global' : project.path}
-          className="h-7 min-w-0 flex-1 font-semibold"
+          className="h-7 min-w-0 flex-1 font-semibold data-active:bg-transparent data-active:text-link"
         >
           <span>{node.label}</span>
         </SidebarMenuButton>

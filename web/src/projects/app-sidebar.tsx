@@ -184,7 +184,7 @@ function Projects({ current }: { current: string }) {
                   // Selecting the open project again goes back to the global view.
                   onClick={() => navigate({ dir: active ? '' : project.path })}
                   title={active ? 'Back to global' : project.path}
-                  className="h-auto flex-col items-start gap-0 py-1.5"
+                  className="h-auto flex-col items-start gap-0 py-1.5 data-active:bg-transparent data-active:text-link"
                 >
                   <span className="w-full truncate font-semibold">{project.name}</span>
                   <span className="w-full truncate text-[11px] text-dim">
