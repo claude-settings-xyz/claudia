@@ -46,6 +46,14 @@ make settings-schema  # refresh the settings list of the docs homepage from your
 
 You need Go 1.26 or later and Node.js 24 or later.
 
+## Workflows
+
+| Workflow | What it does |
+| -------- | ------------ |
+| [CI](.github/workflows/ci.yml) | Builds the web interface, runs `go vet`, `go test` and the web lint, and builds for Windows and Linux. |
+| [Release](.github/workflows/release.yml) | Runs when you push a tag such as `v0.1.0`. Builds the assets on macOS, because the macOS tray needs cgo, and publishes the release with `SHA256SUMS`. |
+| [Docs](.github/workflows/docs.yml) | Builds the docs for pull requests, and publishes them to GitHub Pages from `main`. Set Pages > Source to GitHub Actions in the repository settings. |
+
 ## Security
 
 The server only listens on 127.0.0.1. It refuses requests with a different `Host` header, which blocks DNS rebinding. API requests must send an `X-Claudia` header. Browsers do not let other websites send that header, so they cannot change your files.

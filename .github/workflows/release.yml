@@ -1,0 +1,51 @@
+name: Release
+
+# Push a tag such as v0.1.0 to publish a release. A tag with a dash, such as
+# v0.2.0-beta.1, makes a pre-release. The install scripts only get a pre-release
+# when you ask for its version.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+
+jobs:
+  release:
+    # The macOS tray needs cgo, so the assets are built on a Mac. Windows and
+    # Linux cross-compile from there.
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: go test ./internal/...
+
+      # Writes the assets and SHA256SUMS to bin/release.
+      - run: make release VERSION="$GITHUB_REF_NAME"
+
+      # Running the workflow again replaces the assets of the existing release.
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" bin/release/* --clobber
+          else
+            prerelease=""
+            case "$GITHUB_REF_NAME" in *-*) prerelease="--prerelease" ;; esac
+            gh release create "$GITHUB_REF_NAME" bin/release/* --verify-tag --generate-notes --title "$GITHUB_REF_NAME" $prerelease
+          fi
