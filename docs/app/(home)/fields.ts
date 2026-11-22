@@ -1,4 +1,5 @@
 // Shared by the server, which reads the schema, and the browser, which edits the file.
+import type { Preset } from './presets';
 
 // The control that edits a setting. "json" is the fallback for shapes without a form.
 export type Field =
@@ -17,6 +18,8 @@ export type Setting = {
   field: Field;
   // The default of a boolean, when the schema states it.
   fallback?: boolean;
+  // Common values to pick from. For lists they are entries, and for maps they are names.
+  presets?: Preset[];
   // JSON text of an example value, when there is a useful one.
   example?: string;
 };

@@ -4,6 +4,7 @@ import { ChevronDown, X } from 'lucide-react';
 import { type ComponentProps, type KeyboardEvent, useEffect, useId, useRef, useState } from 'react';
 import { cn } from '@/lib/cn';
 import { type Field, fits, isPlainObject, type Setting } from './fields';
+import type { Preset } from './presets';
 
 // undefined removes the setting from the file.
 export type Change = (path: string[], value: unknown) => void;
@@ -36,7 +37,10 @@ export function SettingRow({
   // Unset settings take one line. Larger editors open on demand or when there is a value.
   const collapsible = field.kind === 'json' || field.kind === 'object' || field.kind === 'map';
   const open = value !== undefined || expanded;
-  const block = collapsible ? open : field.kind === 'list' && Array.isArray(value) && value.length > 0;
+  // Lists with presets need the width for their chips.
+  const block = collapsible
+    ? open
+    : field.kind === 'list' && ((Array.isArray(value) && value.length > 0) || (setting.presets?.length ?? 0) > 0);
 
   const control =
     collapsible && !open ? (
@@ -137,9 +141,28 @@ function Control({
           <Switch checked={(value ?? setting.fallback ?? false) as boolean} onChange={set} label={setting.key} />
         </div>
       );
-    case 'enum':
-      return <OptionSelect options={field.options} value={value as string | undefined} onSelect={set} label={setting.key} />;
+    case 'enum': {
+      const hints = new Map(setting.presets?.map((preset) => [preset.value, preset.hint]));
+      return (
+        <Picker
+          options={field.options.map((option) => ({ value: option, hint: hints.get(option) }))}
+          value={value as string | undefined}
+          onSelect={set}
+          label={setting.key}
+        />
+      );
+    }
     case 'string':
+      if (setting.presets?.length) {
+        return (
+          <PresetInput
+            presets={setting.presets}
+            value={value as string | undefined}
+            onChange={set}
+            label={setting.key}
+          />
+        );
+      }
       return (
         <DraftInput
           value={(value as string | undefined) ?? ''}
@@ -174,6 +197,7 @@ function Control({
           onChange={(items) => set(items.length > 0 ? items : undefined)}
           label={setting.key}
           placeholder={Array.isArray(example) && typeof example[0] === 'string' ? example[0] : 'Add an entry'}
+          presets={setting.presets ?? []}
         />
       );
     case 'map':
@@ -183,6 +207,7 @@ function Control({
           onChange={(entries) => set(Object.keys(entries).length > 0 ? entries : undefined)}
           label={setting.key}
           example={isPlainObject(example) ? Object.entries(example)[0] : undefined}
+          names={setting.presets ?? []}
         />
       );
     case 'object':
@@ -274,37 +299,174 @@ function DraftInput({ value, onCommit, suggestions = [], className, ...props }: 
   );
 }
 
-function OptionSelect({
+type Item = { value: string | undefined; hint?: string; custom?: boolean };
+
+// A list of choices that shows a short hint under each value. It works like a native select:
+// arrows move, Enter picks, Escape closes.
+function Picker({
   options,
   value,
   onSelect,
   label,
   placeholder = 'Not set',
+  shown,
+  onCustom,
 }: {
-  options: string[];
+  options: Preset[];
   value: string | undefined;
   onSelect: (value: string | undefined) => void;
   label: string;
   placeholder?: string;
+  // Text on the button instead of the value.
+  shown?: string;
+  // Adds a last choice for any other value.
+  onCustom?: () => void;
 }) {
-  // A value from a pasted file that the schema does not list still shows.
-  const all = value !== undefined && !options.includes(value) ? [...options, value] : options;
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const root = useRef<HTMLDivElement>(null);
+  const id = useId();
+  // A value from a pasted file that is not in the list still shows.
+  const all = value !== undefined && !options.some((option) => option.value === value) ? [...options, { value }] : options;
+  const items: Item[] = [{ value: undefined }, ...all, ...(onCustom ? [{ value: undefined, custom: true }] : [])];
+  const selected = Math.max(
+    items.findIndex((item) => !item.custom && item.value === value),
+    0,
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: PointerEvent) => !root.current?.contains(event.target as Node) && setOpen(false);
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [open]);
+
+  useEffect(() => {
+    if (open) document.getElementById(`${id}-${active}`)?.scrollIntoView({ block: 'nearest' });
+  }, [open, active, id]);
+
+  function show() {
+    setActive(selected);
+    setOpen(true);
+  }
+
+  function choose(item: Item) {
+    setOpen(false);
+    if (item.custom) onCustom?.();
+    else onSelect(item.value);
+  }
+
+  function onKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
+    if (!open) {
+      if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) {
+        event.preventDefault();
+        show();
+      }
+      return;
+    }
+    if (event.key === 'ArrowDown') setActive((index) => Math.min(index + 1, items.length - 1));
+    else if (event.key === 'ArrowUp') setActive((index) => Math.max(index - 1, 0));
+    else if (event.key === 'Enter' || event.key === ' ') choose(items[active]);
+    else if (event.key === 'Escape' || event.key === 'Tab') return setOpen(false);
+    else return;
+    event.preventDefault();
+  }
+
   return (
-    <div className="relative w-full">
-      <select
-        value={value ?? ''}
-        onChange={(event) => onSelect(event.target.value === '' ? undefined : event.target.value)}
+    <div ref={root} className="relative w-full">
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={open ? id : undefined}
+        aria-activedescendant={open ? `${id}-${active}` : undefined}
         aria-label={label}
-        className={cn(input, 'appearance-none pr-8', value === undefined && 'text-fd-muted-foreground')}
+        onClick={() => (open ? setOpen(false) : show())}
+        onKeyDown={onKeyDown}
+        className={cn(
+          input,
+          'flex items-center justify-between gap-2 text-left',
+          shown === undefined && value === undefined && 'text-fd-muted-foreground',
+        )}
       >
-        <option value="">{placeholder}</option>
-        {all.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="pointer-events-none absolute top-2.5 right-2.5 size-4 text-fd-muted-foreground" />
+        <span className="truncate">{shown ?? value ?? placeholder}</span>
+        <ChevronDown className="size-4 shrink-0 text-fd-muted-foreground" />
+      </button>
+      {open && (
+        <ul
+          id={id}
+          role="listbox"
+          aria-label={label}
+          className="absolute right-0 z-30 mt-1 max-h-80 w-max max-w-[min(22rem,calc(100vw-2rem))] min-w-full overflow-y-auto rounded-lg border bg-fd-popover p-1 shadow-xl"
+        >
+          {items.map((item, index) => (
+            <li
+              key={item.custom ? 'custom' : (item.value ?? '')}
+              id={`${id}-${index}`}
+              role="option"
+              aria-selected={index === selected && !item.custom}
+              onPointerEnter={() => setActive(index)}
+              onClick={() => choose(item)}
+              className={cn(
+                'flex cursor-pointer flex-col rounded-md px-2.5 py-1.5 text-sm',
+                index === active && 'bg-fd-accent text-fd-accent-foreground',
+              )}
+            >
+              <span
+                className={cn(
+                  item.value === undefined ? 'text-fd-muted-foreground' : 'font-medium',
+                  index === selected && !item.custom && 'text-[#b4482a] dark:text-[#f5936a]',
+                )}
+              >
+                {item.custom ? 'Custom…' : (item.value ?? placeholder)}
+              </span>
+              {item.hint && <span className="text-xs text-fd-muted-foreground">{item.hint}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// Common values in a list, and a field for any other value.
+function PresetInput({
+  presets,
+  value,
+  onChange,
+  label,
+}: {
+  presets: Preset[];
+  value: string | undefined;
+  onChange: (value: string | undefined) => void;
+  label: string;
+}) {
+  const known = value === undefined || presets.some((preset) => preset.value === value);
+  const [custom, setCustom] = useState(!known);
+  if (!known && !custom) setCustom(true);
+
+  return (
+    <div className="flex w-full flex-col gap-2">
+      <Picker
+        options={presets}
+        value={custom ? undefined : value}
+        shown={custom ? 'Custom…' : undefined}
+        onSelect={(next) => {
+          setCustom(false);
+          onChange(next);
+        }}
+        onCustom={() => setCustom(true)}
+        label={label}
+      />
+      {custom && (
+        <DraftInput
+          value={value ?? ''}
+          onCommit={(text) => onChange(text === '' ? undefined : text)}
+          placeholder="Type a value"
+          aria-label={`${label}, custom value`}
+          autoFocus={value === undefined}
+        />
+      )}
     </div>
   );
 }
@@ -315,15 +477,18 @@ function ListControl({
   onChange,
   label,
   placeholder,
+  presets,
 }: {
   items: string[];
   options: string[];
   onChange: (items: string[]) => void;
   label: string;
   placeholder: string;
+  presets: Preset[];
 }) {
   const [adding, setAdding] = useState('');
   const remaining = options.filter((option) => !items.includes(option));
+  const suggested = presets.filter((preset) => !items.includes(preset.value));
 
   function add(entry: string | undefined) {
     if (!entry?.trim()) return;
@@ -355,7 +520,13 @@ function ListControl({
       ))}
       {options.length > 0 ? (
         remaining.length > 0 && (
-          <OptionSelect options={remaining} value={undefined} onSelect={add} label={`Add to ${label}`} placeholder="Add an entry" />
+          <Picker
+            options={remaining.map((option) => ({ value: option }))}
+            value={undefined}
+            onSelect={add}
+            label={`Add to ${label}`}
+            placeholder="Add an entry"
+          />
         )
       ) : (
         <div className="flex gap-2">
@@ -372,6 +543,21 @@ function ListControl({
           </button>
         </div>
       )}
+      {suggested.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {suggested.map((preset) => (
+            <button
+              key={preset.value}
+              type="button"
+              title={preset.hint}
+              onClick={() => add(preset.value)}
+              className="rounded-full border px-2.5 py-1 font-mono text-xs text-fd-muted-foreground transition-colors hover:border-[#d9623f]/60 hover:text-fd-foreground"
+            >
+              + {preset.value}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -381,14 +567,17 @@ function MapControl({
   onChange,
   label,
   example,
+  names,
 }: {
   entries: Record<string, string>;
   onChange: (entries: Record<string, string>) => void;
   label: string;
   example?: [string, unknown];
+  names: Preset[];
 }) {
   const [key, setKey] = useState('');
   const [value, setValue] = useState('');
+  const namesId = useId();
   const pairs = Object.entries(entries);
 
   // Rebuilding the object keeps the order of the keys.
@@ -431,8 +620,18 @@ function MapControl({
         onKeyDown={(event) => event.key === 'Enter' && add()}
         placeholder={example?.[0] ?? 'Name'}
         aria-label={`New ${label} name`}
+        list={names.length > 0 ? namesId : undefined}
         className={cn(input, 'font-mono text-xs')}
       />
+      {names.length > 0 && (
+        <datalist id={namesId}>
+          {names
+            .filter((name) => !(name.value in entries))
+            .map((name) => (
+              <option key={name.value} value={name.value} label={name.hint} />
+            ))}
+        </datalist>
+      )}
       <input
         value={value}
         onChange={(event) => setValue(event.target.value)}
@@ -495,6 +694,11 @@ function JSONControl({
         className={cn(input, 'h-auto py-2 font-mono text-xs leading-relaxed', error && 'border-red-500')}
       />
       {error && <p className="text-xs text-red-500">{error}</p>}
+      {draft.trim() === '' && placeholder && (
+        <button type="button" onClick={() => onChange(JSON.parse(placeholder))} className={cn(smallButton, 'self-start')}>
+          Use the example
+        </button>
+      )}
     </div>
   );
 }

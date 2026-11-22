@@ -1,5 +1,6 @@
 import { categories, examples, type CategoryId } from './categories';
 import type { Field, Setting } from './fields';
+import { presets } from './presets';
 import snapshot from './settings-schema.json';
 
 type Schema = {
@@ -40,7 +41,7 @@ function strings(values: unknown[] | undefined): string[] {
   return (values ?? []).filter((value): value is string => typeof value === 'string');
 }
 
-function fieldOf(schema: Schema): Field {
+function fieldOf(schema: Schema, path: string): Field {
   const s = withoutNull(schema);
 
   if (s.anyOf) {
@@ -67,7 +68,7 @@ function fieldOf(schema: Schema): Field {
       if (s.properties && Object.keys(s.properties).length > 0) {
         const settings = Object.entries(s.properties)
           .filter(([, child]) => !isInternal(child))
-          .map(([key, child]) => toSetting(key, child));
+          .map(([key, child]) => toSetting(key, child, `${path}.${key}`));
         return { kind: 'object', settings };
       }
       const values = s.additionalProperties;
@@ -91,14 +92,23 @@ function fallbackOf(schema: Schema): boolean | undefined {
   return undefined;
 }
 
-function toSetting(key: string, schema: Schema): Setting {
-  const field = fieldOf(schema);
+function toSetting(key: string, schema: Schema, path = key): Setting {
+  let field = fieldOf(schema, path);
+  let common = presets[path];
+  // Known values in the schema, such as the names of the themes, become presets.
+  if (field.kind === 'string' && !common && field.suggestions.length > 0) {
+    common = field.suggestions.map((value) => ({ value }));
+    field = { kind: 'string', suggestions: [] };
+  }
+  // Too many to list, so the field suggests them as you type.
+  if (path === 'timeZone') field = { kind: 'string', suggestions: Intl.supportedValuesOf('timeZone') };
   const description = (schema.description ?? '').replace(/^\(EAP\)\s*/, '');
   return {
     key,
     description,
     field,
     fallback: field.kind === 'boolean' ? fallbackOf(schema) : undefined,
+    presets: common,
     example: key in examples ? JSON.stringify(examples[key], null, 2) : undefined,
   };
 }
