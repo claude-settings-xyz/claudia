@@ -42,6 +42,41 @@ func TestSkills(t *testing.T) {
 	}
 }
 
+func TestSkillInvocation(t *testing.T) {
+	paths := Paths{ConfigDir: t.TempDir()}
+	root := filepath.Join(paths.ConfigDir, "skills")
+	for name, content := range map[string]string{
+		"normal":       "---\ndescription: Normal\n---\n",
+		"command-only": "---\ndescription: Mine\ndisable-model-invocation: true\n---\n",
+		"quoted":       "---\ndisable-model-invocation: \"true\"\n---\n",
+		"claude-only":  "---\nuser-invocable: false\n---\n",
+		"allowed":      "---\ndisable-model-invocation: false\nuser-invocable: true\n---\n",
+		"broken":       "---\ndisable-model-invocation: [\n---\n",
+	} {
+		path := filepath.Join(root, name, "SKILL.md")
+		os.MkdirAll(filepath.Dir(path), 0o755)
+		os.WriteFile(path, []byte(content), 0o644)
+	}
+
+	skills, err := paths.Skills("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[string][2]bool{
+		"normal":       {true, true},
+		"command-only": {false, true},
+		"quoted":       {false, true},
+		"claude-only":  {true, false},
+		"allowed":      {true, true},
+		"broken":       {true, true},
+	}
+	for _, skill := range skills {
+		if got := [2]bool{skill.ModelInvocable, skill.UserInvocable}; got != want[skill.Name] {
+			t.Errorf("%s: got model, user = %v, want %v", skill.Name, got, want[skill.Name])
+		}
+	}
+}
+
 func TestSkillFileRejectsBadNames(t *testing.T) {
 	paths := Paths{ConfigDir: "/config"}
 	for _, name := range []string{"", ".", "..", ".trash", "a/b", `a\b`, "../x"} {

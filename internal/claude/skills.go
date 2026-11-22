@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 
 	"go.yaml.in/yaml/v3"
@@ -19,6 +20,10 @@ type Skill struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Path        string `json:"path"`
+	// The frontmatter can stop Claude from using the skill (disable-model-invocation: true)
+	// or you from running it (user-invocable: false). skillOverrides cannot change that.
+	ModelInvocable bool `json:"modelInvocable"`
+	UserInvocable  bool `json:"userInvocable"`
 }
 
 // SkillsDir returns the skills folder of a scope. An empty dir selects the user scope.
@@ -69,32 +74,52 @@ func (p Paths) Skills(dir string) ([]Skill, error) {
 		if err != nil {
 			continue
 		}
+		meta := frontmatter(data)
 		skills = append(skills, Skill{
-			Name:        entry.Name(),
-			Description: description(data),
-			Path:        path,
+			Name:           entry.Name(),
+			Description:    strings.TrimSpace(meta.Description),
+			Path:           path,
+			ModelInvocable: !isYAMLBool(meta.DisableModelInvocation, true),
+			UserInvocable:  !isYAMLBool(meta.UserInvocable, false),
 		})
 	}
 	slices.SortFunc(skills, func(a, b Skill) int { return strings.Compare(a.Name, b.Name) })
 	return skills, nil
 }
 
-func description(data []byte) string {
+type skillMeta struct {
+	Description            string `yaml:"description"`
+	DisableModelInvocation any    `yaml:"disable-model-invocation"`
+	UserInvocable          any    `yaml:"user-invocable"`
+}
+
+// frontmatter reads the YAML block at the top of a SKILL.md. A file without one,
+// or with YAML that does not parse, gives empty values.
+func frontmatter(data []byte) skillMeta {
+	var meta skillMeta
 	data = bytes.TrimPrefix(data, []byte("\ufeff"))
 	if !bytes.HasPrefix(data, []byte("---")) {
-		return ""
+		return meta
 	}
 	rest := data[3:]
 	end := bytes.Index(rest, []byte("\n---"))
 	if end < 0 {
-		return ""
-	}
-
-	var meta struct {
-		Description string `yaml:"description"`
+		return meta
 	}
 	if yaml.Unmarshal(rest[:end], &meta) != nil {
-		return ""
+		return skillMeta{}
 	}
-	return strings.TrimSpace(meta.Description)
+	return meta
+}
+
+// isYAMLBool reports whether a frontmatter value is the boolean want. Authors
+// write both true and "true".
+func isYAMLBool(value any, want bool) bool {
+	switch v := value.(type) {
+	case bool:
+		return v == want
+	case string:
+		return strings.EqualFold(strings.TrimSpace(v), strconv.FormatBool(want))
+	}
+	return false
 }

@@ -18,7 +18,8 @@ export type ConfigFile = {
 
 export type Install = { scope: string; projectPath?: string; version?: string }
 
-export type Skill = { name: string; description: string; path: string }
+// The two flags come from the frontmatter of SKILL.md, which skillOverrides cannot change.
+export type Skill = { name: string; description: string; path: string; modelInvocable: boolean; userInvocable: boolean }
 
 // user: every folder. local: one folder, only you. project: .mcp.json, shared.
 export type MCPScope = 'user' | 'local' | 'project'

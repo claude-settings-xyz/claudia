@@ -1,19 +1,21 @@
-import { useQuery } from '@tanstack/react-query'
-import { Plus, Sparkles } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Lock, Plus, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Alert, AlertAction, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FileEditor } from '@/files/file-editor'
-import { queries, type FileRef, type Skill } from '@/lib/api'
+import { api, queries, type FileRef, type Skill } from '@/lib/api'
 import { confirmDiscard, fileKey } from '@/lib/location'
+import { notify } from '@/lib/notify'
 import { parseSettings, setPath, useUpdateSettings, type SkillVisibility } from '@/lib/settings'
 import { EmptyState } from '@/components/empty-state'
 import { ScopeBadge } from '@/components/scope-badge'
 import { cn } from '@/lib/ui'
+import { removeFrontmatterKey } from '@/skills/frontmatter'
 import { NewSkillForm } from '@/skills/new-skill-form'
 import { VisibilitySelect, visibilities } from '@/skills/visibility-select'
 
@@ -29,6 +31,9 @@ export function SkillsPanel({ dir, actions }: { dir: string; actions: Element | 
   const [selected, setSelected] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
   const [creating, setCreating] = useState(false)
+  // Changes when Claudia edits the open SKILL.md, so that the editor shows the new text.
+  const [revision, setRevision] = useState(0)
+  const unlock = useUnlock(() => setRevision((each) => each + 1))
 
   if (own.isPending || global.isPending || scopeFile.isPending || globalFile.isPending) {
     return <Skeleton className="h-64" />
@@ -65,6 +70,11 @@ export function SkillsPanel({ dir, actions }: { dir: string; actions: Element | 
     if (current && !confirmDiscard([fileKey(skillRef(current))])) return
     setCreating(false)
     setSelected(entryKey(entry))
+  }
+
+  function removeLock(entry: Entry, key: string, title: string) {
+    if (!confirmDiscard([fileKey(skillRef(entry))])) return
+    unlock.mutate({ ref: skillRef(entry), key, title })
   }
 
   function choose(name: string, value: SkillVisibility | undefined) {
@@ -141,13 +151,34 @@ export function SkillsPanel({ dir, actions }: { dir: string; actions: Element | 
               {dir && !current.dir && <ScopeBadge scope="global" />}
               <VisibilitySelect
                 value={dir ? scopeOverrides[current.name] : effective(current.name)}
+                locks={{ model: !current.modelInvocable, user: !current.userInvocable }}
                 inherited={dir ? { value: inherited(current.name), global: current.name in globalOverrides } : undefined}
                 disabled={!scopeSettings || update.isPending}
                 onChange={(value) => choose(current.name, value)}
               />
             </div>
+            {!current.modelInvocable && (
+              <LockNotice
+                title="Only you can run this skill"
+                flag="disable-model-invocation: true"
+                text="so Claude never starts it on its own. The visibility setting cannot change that."
+                action="Let Claude use it"
+                busy={unlock.isPending}
+                onAction={() => removeLock(current, 'disable-model-invocation', 'Claude can use it now')}
+              />
+            )}
+            {!current.userInvocable && (
+              <LockNotice
+                title="Only Claude can use this skill"
+                flag="user-invocable: false"
+                text="so it is not in your / menu. The visibility setting cannot change that."
+                action="Let me run it"
+                busy={unlock.isPending}
+                onAction={() => removeLock(current, 'user-invocable', 'You can run it now')}
+              />
+            )}
             <div className="min-h-0 flex-1">
-              <FileEditor key={entryKey(current)} {...skillRef(current)} toolbar={actions} />
+              <FileEditor key={`${entryKey(current)}:${revision}`} {...skillRef(current)} toolbar={actions} />
             </div>
           </>
         ) : (
@@ -198,17 +229,90 @@ function SkillList({
               <span className={cn('min-w-0 flex-1 truncate font-medium', state === 'off' && 'text-muted-foreground')}>
                 {entry.name}
               </span>
-              {state !== 'on' && (
-                <Badge variant="outline" className="shrink-0">
-                  {visibilities[state].label}
-                </Badge>
-              )}
+              <StateBadge entry={entry} state={state} />
             </button>
           </li>
         )
       })}
     </ul>
   )
+}
+
+// The SKILL.md can lock a skill to one side. Off still wins, because it hides the skill from both.
+function StateBadge({ entry, state }: { entry: Entry; state: SkillVisibility }) {
+  const label =
+    state === 'off'
+      ? visibilities.off.label
+      : !entry.modelInvocable
+        ? visibilities['user-invocable-only'].label
+        : !entry.userInvocable
+          ? 'Claude only'
+          : state === 'on'
+            ? null
+            : visibilities[state].label
+  if (!label) return null
+  const locked = state !== 'off' && (!entry.modelInvocable || !entry.userInvocable)
+  return (
+    <Badge variant="outline" className="shrink-0" title={locked ? 'Set in its SKILL.md' : undefined}>
+      {locked && <Lock data-icon="inline-start" />}
+      {label}
+    </Badge>
+  )
+}
+
+function LockNotice({
+  title,
+  flag,
+  text,
+  action,
+  busy,
+  onAction,
+}: {
+  title: string
+  flag: string
+  text: string
+  action: string
+  busy: boolean
+  onAction: () => void
+}) {
+  return (
+    <Alert className="has-data-[slot=alert-action]:pr-40">
+      <Lock />
+      <AlertTitle>{title}</AlertTitle>
+      <AlertDescription>
+        Its SKILL.md sets <code className="font-mono">{flag}</code>, {text}
+      </AlertDescription>
+      <AlertAction>
+        <Button size="sm" variant="outline" disabled={busy} onClick={onAction}>
+          {action}
+        </Button>
+      </AlertAction>
+    </Alert>
+  )
+}
+
+// Removes a lock from the frontmatter of a SKILL.md. Undo puts the old text back.
+function useUnlock(onChanged: () => void) {
+  const client = useQueryClient()
+
+  async function write(ref: FileRef, change: (text: string) => string) {
+    const file = await client.fetchQuery({ ...queries.file(ref), staleTime: 0 })
+    const saved = await api.saveFile(ref, change(file.content), file.version)
+    client.setQueryData(queries.file(ref).queryKey, saved)
+    client.invalidateQueries({ queryKey: ['skills'] })
+    onChanged()
+    return file.content
+  }
+
+  return useMutation({
+    mutationFn: ({ ref, key }: { ref: FileRef; key: string; title: string }) =>
+      write(ref, (text) => removeFrontmatterKey(text, key)),
+    onSuccess: (before, { ref, title }) =>
+      notify.done(title, 'Removed the line from its SKILL.md.', () =>
+        write(ref, () => before).catch((error: Error) => notify.error('Could not undo', error.message)),
+      ),
+    onError: (error) => notify.error('Could not change the skill', error.message),
+  })
 }
 
 function GroupLabel({ className, children }: { className?: string; children: string }) {
