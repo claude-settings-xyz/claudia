@@ -36,7 +36,7 @@ const grid: CSSProperties = {
   maskImage: 'radial-gradient(80% 70% at 30% 0%, black, transparent 75%)',
 };
 
-export function ClaudiaCard({ version }: { version: string }) {
+export function ClaudiaCard() {
   const [system, setSystem] = useState('unix');
   const [copied, setCopied] = useState(false);
   const install = installs.find((each) => each.id === system) ?? installs[0];
@@ -64,9 +64,6 @@ export function ClaudiaCard({ version }: { version: string }) {
           <div className="flex items-center gap-2.5">
             <Logo />
             <span className="text-lg font-semibold">Claudia</span>
-            <span className="rounded-full bg-black/20 px-2.5 py-0.5 text-xs font-medium text-white/85 ring-1 ring-white/15">
-              Built from Claude Code {version}
-            </span>
           </div>
           <h2 className="text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
             Edit every setting with a form, not with{' '}
