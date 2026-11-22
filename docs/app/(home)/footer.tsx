@@ -19,6 +19,17 @@ export function Footer() {
           <p className="max-w-xs text-sm text-fd-muted-foreground">
             All {count} Claude Code settings in plain English, with an editor that writes your settings.json.
           </p>
+          <p className="mt-auto max-w-xs pt-4 text-xs text-fd-muted-foreground">
+            Open source under the{' '}
+            <a href={`${githubUrl}/blob/main/LICENSE`} className="underline-offset-4 hover:text-fd-foreground hover:underline">
+              MIT License
+            </a>
+            . It is not made by or affiliated with{' '}
+            <a href="https://www.anthropic.com" className="underline-offset-4 hover:text-fd-foreground hover:underline">
+              Anthropic
+            </a>
+            . Claude and Claude Code are trademarks of Anthropic.
+          </p>
         </div>
 
         <Column title="Claude Code settings">
@@ -54,20 +65,6 @@ export function Footer() {
           <Item href="https://json.schemastore.org/claude-code-settings.json">settings.json schema</Item>
           <Item href="/llms.txt">llms.txt</Item>
         </Column>
-      </div>
-
-      <div className="border-t">
-        <p className="mx-auto w-full max-w-6xl px-6 py-6 text-xs text-fd-muted-foreground">
-          Open source under the{' '}
-          <a href={`${githubUrl}/blob/main/LICENSE`} className="underline-offset-4 hover:text-fd-foreground hover:underline">
-            MIT License
-          </a>
-          . It is not made by or affiliated with{' '}
-          <a href="https://www.anthropic.com" className="underline-offset-4 hover:text-fd-foreground hover:underline">
-            Anthropic
-          </a>
-          . Claude and Claude Code are trademarks of Anthropic.
-        </p>
       </div>
     </footer>
   );
