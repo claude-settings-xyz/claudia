@@ -34,10 +34,6 @@ export function Hero({ count }: { count: number }) {
 
       <div className="mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-12 px-6 pt-16 pb-12 sm:pt-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)]">
         <div className="flex flex-col items-start">
-          <p className="mb-6 flex items-center gap-2 rounded-full border bg-fd-card/60 px-3 py-1 text-sm font-medium text-fd-muted-foreground backdrop-blur">
-            <span className="size-1.5 rounded-full bg-[#e0703f] shadow-[0_0_8px_2px_rgba(224,112,63,0.6)]" />
-            Claude Code <span className="font-mono text-xs">settings.json</span>
-          </p>
           <h1 className="text-[2.75rem] leading-[1.05] font-extrabold tracking-tight sm:text-6xl">
             Every setting,
             <span className="block bg-linear-to-r from-[#d9623f] to-[#a8401f] bg-clip-text pb-1 text-transparent dark:from-[#ffc29e] dark:via-[#f5936a] dark:to-[#e0683f]">
