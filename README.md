@@ -1,5 +1,7 @@
 # Claudia
 
+![Claudia: edit every Claude Code setting with a form, not with JSON](.github/banner.png)
+
 A tray app that manages your Claude Code `settings.json`, `CLAUDE.md`, memory, MCP servers, skills, plugins and marketplaces, globally and for each project folder. The interface runs in your browser at http://127.0.0.1:7377.
 
 ## Install
