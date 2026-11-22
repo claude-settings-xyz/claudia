@@ -10,17 +10,7 @@ import type { Category } from './settings-data';
 type Mode = 'browse' | 'build';
 
 // The settings, as a browser by group or as a builder. Links to #builder open the builder.
-export function Configuration({
-  categories,
-  options,
-  count,
-  version,
-}: {
-  categories: Category[];
-  options: BuilderOptions;
-  count: number;
-  version: string;
-}) {
+export function Configuration({ categories, options }: { categories: Category[]; options: BuilderOptions }) {
   const [mode, setMode] = useState<Mode>('browse');
 
   useEffect(() => {
@@ -40,13 +30,8 @@ export function Configuration({
   return (
     <section id="settings" className="scroll-mt-20">
       <span id="builder" className="block scroll-mt-20" />
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Configuration</h2>
-          <p className="mt-1 text-sm text-fd-muted-foreground">
-            {count} settings from Claude Code {version}.
-          </p>
-        </div>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-2xl font-bold tracking-tight">Configuration</h2>
         <div role="radiogroup" aria-label="View" className="flex rounded-lg border bg-fd-card p-1">
           {(
             [

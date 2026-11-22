@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  const { categories, count, version } = getSettings();
+  const { categories, count } = getSettings();
 
   return (
     <main className="flex flex-1 flex-col gap-20 pb-24">
@@ -34,7 +34,7 @@ export default function HomePage() {
       </section>
 
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
-        <Configuration categories={categories} options={getBuilderOptions()} count={count} version={version} />
+        <Configuration categories={categories} options={getBuilderOptions()} />
       </div>
 
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
