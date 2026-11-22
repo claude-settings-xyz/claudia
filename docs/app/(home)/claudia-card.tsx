@@ -1,10 +1,8 @@
 'use client';
 
-import { ArrowRight, Check, Copy, FolderTree, type LucideIcon, ToggleRight } from 'lucide-react';
-import Link from 'next/link';
+import { Check, Copy, FolderTree, type LucideIcon, ToggleRight } from 'lucide-react';
 import { type CSSProperties, type ReactNode, useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
-import { githubUrl } from '@/lib/shared';
 
 const unixCommand = 'curl -fsSL https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.sh | sh';
 const windowsCommand = 'irm https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.ps1 | iex';
@@ -15,7 +13,6 @@ const systems = [
     id: 'macos',
     label: 'macOS',
     terminal: 'Open Terminal',
-    terminalHint: 'Press ⌘ Space, type Terminal, and press Return.',
     paste: 'Paste this, and press Return',
     command: unixCommand,
     later: 'in a terminal, or click its icon in the menu bar.',
@@ -24,7 +21,6 @@ const systems = [
     id: 'linux',
     label: 'Linux',
     terminal: 'Open a terminal',
-    terminalHint: 'On most desktops, press Ctrl Alt T.',
     paste: 'Paste this, and press Enter',
     command: unixCommand,
     later: 'in a terminal, or click its icon in the tray.',
@@ -33,7 +29,6 @@ const systems = [
     id: 'windows',
     label: 'Windows',
     terminal: 'Open PowerShell',
-    terminalHint: 'Press the Windows key, type PowerShell, and press Enter.',
     paste: 'Paste this, and press Enter',
     command: windowsCommand,
     later: 'in a new terminal, or choose Claudia in the Start menu.',
@@ -119,9 +114,7 @@ export function ClaudiaCard() {
           </div>
 
           <ol className="flex flex-col gap-4">
-            <Step number={1} title={install.terminal}>
-              {install.terminalHint}
-            </Step>
+            <Step number={1} title={install.terminal} />
             <Step number={2} title={install.paste}>
               <div className="mt-1 flex items-center gap-2 rounded-xl bg-black/35 p-1.5 pl-4 shadow-lg ring-1 ring-white/20">
                 <code className="min-w-0 flex-1 overflow-x-auto font-mono text-xs whitespace-nowrap text-white/90">
@@ -146,16 +139,6 @@ export function ClaudiaCard() {
               {install.later}
             </Step>
           </ol>
-
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-sm font-semibold">
-            <Link href="/docs" className="group flex items-center gap-1 hover:underline">
-              Read the docs
-              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <a href={githubUrl} className="text-white/80 hover:text-white hover:underline">
-              View on GitHub
-            </a>
-          </div>
         </div>
       </div>
 
@@ -185,17 +168,17 @@ export function ClaudiaCard() {
 
         {/* Placed on empty parts of the screenshot, next to what they describe. */}
         <Callout icon={FolderTree} className="top-[62%] left-6 [animation-delay:-3s]">
-          All your projects, or one
+          Global or project settings
         </Callout>
         <Callout icon={ToggleRight} className="top-[57%] right-[22%]">
-          Switches, not true and false
+          Turn it on with one click
         </Callout>
       </div>
     </section>
   );
 }
 
-function Step({ number, title, children }: { number: number; title: string; children: ReactNode }) {
+function Step({ number, title, children }: { number: number; title: string; children?: ReactNode }) {
   return (
     <li className="flex gap-3">
       <span className="grid size-6 shrink-0 place-items-center rounded-full bg-white text-xs font-bold text-[#8a321c]">
@@ -203,7 +186,7 @@ function Step({ number, title, children }: { number: number; title: string; chil
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <p className="font-semibold">{title}</p>
-        <div className="text-sm text-white/80">{children}</div>
+        {children && <div className="text-sm text-white/80">{children}</div>}
       </div>
     </li>
   );
