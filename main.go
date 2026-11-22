@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -27,19 +28,38 @@ var version = "dev"
 func main() {
 	port := flag.Int("port", 7377, "port for the local web UI")
 	noOpen := flag.Bool("no-open", false, "don't open the browser at launch")
+	foreground := flag.Bool("foreground", false, "stay in the terminal instead of running in the background")
 	flag.Parse()
 
 	addr := net.JoinHostPort("127.0.0.1", strconv.Itoa(*port))
 	apiURL := "http://" + addr
 	uiURL := cmp.Or(web.DevURL, apiURL)
 
-	listener, err := net.Listen("tcp", addr)
+	listener, err := inheritedListener()
 	if err != nil {
-		if isRunning(apiURL) {
-			openBrowser(uiURL)
+		log.Fatalf("use the listener from the terminal: %v", err)
+	}
+	if listener == nil {
+		listener, err = net.Listen("tcp", addr)
+		if err != nil {
+			if isRunning(apiURL) {
+				openBrowser(uiURL)
+				return
+			}
+			log.Fatalf("listen on %s: %v", addr, err)
+		}
+
+		// Started from a terminal, Claudia continues in the background and gives the
+		// terminal back. It listens first, so that errors still show in the terminal.
+		if !*foreground && web.DevURL == "" && fromTerminal() {
+			logPath, err := detach(listener)
+			if err != nil {
+				log.Fatalf("start in the background: %v", err)
+			}
+			fmt.Printf("Claudia is running in the background at %s.\n", uiURL)
+			fmt.Printf("Quit it from its tray icon. Its log is in %s.\n", logPath)
 			return
 		}
-		log.Fatalf("listen on %s: %v", addr, err)
 	}
 
 	paths, err := claude.DefaultPaths()

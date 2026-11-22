@@ -106,6 +106,9 @@ fetch() {
 dry_run() {
 	say "Would download $base/$1 and $base/SHA256SUMS"
 	say "Would install to $2"
+	if [ "$os" = darwin ]; then
+		say "Would add the claudia command to $(command_dir)"
+	fi
 	if [ -n "${CLAUDIA_NO_AUTOSTART:-}" ]; then
 		say "Would not start Claudia at login, and would remove $3 if it exists"
 	else
@@ -162,6 +165,24 @@ report() {
 	if [ -z "${CLAUDIA_NO_AUTOSTART:-}" ]; then
 		say "It starts again when you log in."
 	fi
+	say "To start it or open it from a terminal, type claudia."
+}
+
+# Where the claudia command goes on macOS: /usr/local/bin if it is yours to write, as with Homebrew.
+command_dir() {
+	if [ -d /usr/local/bin ] && [ -w /usr/local/bin ]; then
+		say /usr/local/bin
+	else
+		say "$HOME/.local/bin"
+	fi
+}
+
+# Says how to add a folder to PATH, if it is not there yet.
+check_path() {
+	case ":$PATH:" in
+	*":$1:"*) ;;
+	*) say "Add $1 to your PATH to start claudia from a terminal." ;;
+	esac
 }
 
 install_macos() {
@@ -186,11 +207,22 @@ install_macos() {
 	xattr -dr com.apple.quarantine "$app" 2>/dev/null || true
 	say "Installed $app"
 
+	# The command runs the binary inside the app, so that Claudia has no Dock icon.
+	command="$(command_dir)/claudia"
+	mkdir -p "$(dirname "$command")"
+	cat >"$command" <<CMD
+#!/bin/sh
+# Starts Claudia from a terminal. install.sh wrote this file.
+exec "$binary" "\$@"
+CMD
+	chmod 755 "$command"
+
 	if [ -n "${CLAUDIA_NO_AUTOSTART:-}" ]; then
 		rm -f "$agent"
 		open "$app" --args -no-open
 		report "menu bar"
 		say "To start it when you log in, add it in System Settings > General > Login Items."
+		check_path "$(dirname "$command")"
 		return
 	fi
 
@@ -219,6 +251,7 @@ PLIST
 	# Outside a desktop session, for example over SSH, the agent only loads at the next login.
 	launchctl bootstrap "gui/$(id -u)" "$agent" 2>/dev/null || open "$app" --args -no-open 2>/dev/null || true
 	report "menu bar"
+	check_path "$(dirname "$command")"
 }
 
 # The Claudia logo, for the app menu and the desktop entry.
@@ -284,10 +317,7 @@ install_linux() {
 		say "There is no desktop session, so Claudia did not start. Run claudia to start it."
 	fi
 
-	case ":$PATH:" in
-	*":$bin_dir:"*) ;;
-	*) say "Add $bin_dir to your PATH to run claudia from a terminal." ;;
-	esac
+	check_path "$bin_dir"
 	case "${XDG_CURRENT_DESKTOP:-}" in
 	*GNOME*) say "On GNOME, the tray icon needs the AppIndicator extension." ;;
 	esac
@@ -296,6 +326,11 @@ install_linux() {
 uninstall() {
 	stop_running
 	if [ "$os" = darwin ]; then
+		for command in /usr/local/bin/claudia "$HOME/.local/bin/claudia"; do
+			if grep -q 'Claudia.app' "$command" 2>/dev/null; then
+				rm -f "$command"
+			fi
+		done
 		rm -rf "$HOME/Applications/Claudia.app" \
 			"$HOME/Library/LaunchAgents/$label.plist" \
 			"$HOME/Library/Application Support/claudia" \

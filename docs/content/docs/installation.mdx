@@ -25,7 +25,19 @@ The script downloads the latest release and checks it against the `SHA256SUMS` f
 | Linux   | `~/.local/bin/claudia`, with an entry in the app menu   | `~/.config/autostart/claudia.desktop`           |
 | Windows | `%LOCALAPPDATA%\Programs\Claudia`, with a Start menu entry | The `Run` key in `HKEY_CURRENT_USER`            |
 
+The script also lets you type `claudia` in a terminal. On macOS, it adds a `claudia` command to `/usr/local/bin`, or to `~/.local/bin` if you cannot write to `/usr/local/bin`. On Windows, it adds the Claudia folder to your `PATH`. If the folder is not in your `PATH` yet, the script tells you.
+
 To update Claudia, run the same command again. The script stops the running copy before it replaces it.
+
+## Start from a terminal
+
+```bash
+claudia
+```
+
+Claudia starts in the background and gives the terminal back, so you can close the terminal. If Claudia is already running, the command opens the interface in your browser.
+
+Claudia writes its log to a file. On macOS, it is `~/Library/Caches/claudia/claudia.log`. On Linux, it is `~/.cache/claudia/claudia.log`. To keep Claudia in the terminal and see its log there, use `-foreground`.
 
 ### Options
 
@@ -76,16 +88,17 @@ This builds the web interface first. Then it builds the binary into `bin/claudia
 ./bin/claudia
 ```
 
-Claudia adds its icon to the tray and opens the interface in your browser.
+Claudia adds its icon to the tray and opens the interface in your browser. From a terminal, it continues in the background, as described in [Start from a terminal](#start-from-a-terminal).
 
 If Claudia is already running, a second launch does not start a new copy. It opens the browser for the running instance.
 
 #### Flags
 
-| Flag       | Default | Description                                  |
-| ---------- | ------- | -------------------------------------------- |
-| `-port`    | `7377`  | Port for the local server.                   |
-| `-no-open` | `false` | Do not open the browser when Claudia starts. |
+| Flag          | Default | Description                                                     |
+| ------------- | ------- | --------------------------------------------------------------- |
+| `-port`       | `7377`  | Port for the local server.                                      |
+| `-no-open`    | `false` | Do not open the browser when Claudia starts.                    |
+| `-foreground` | `false` | Stay in the terminal. Without it, Claudia runs in the background. |
 
 ## Development
 
@@ -115,5 +128,5 @@ Upload all of them to a GitHub release. The install scripts download from the la
 ## Platform notes
 
 - **macOS**: the icon shows in the menu bar. Run `make app` to build `bin/Claudia.app`. It has no Dock icon. To start Claudia when you log in, add it in System Settings > General > Login Items.
-- **Windows**: the icon shows in the notification area. The binary is built with `-H=windowsgui`, so no console window opens.
+- **Windows**: the icon shows in the notification area. The binary is built with `-H=windowsgui`, so no console window opens, and a terminal does not wait for it.
 - **Linux**: you need a tray that supports StatusNotifierItem. On GNOME, install the AppIndicator extension.

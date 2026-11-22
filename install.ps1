@@ -50,8 +50,30 @@
         }
     }
 
+    # The user PATH, as written, so that entries such as %USERPROFILE%\bin stay as they are.
+    function Get-UserPath {
+        $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Environment')
+        $value = $key.GetValue('Path', '', [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
+        $key.Close()
+        @($value -split ';' | Where-Object { $_ })
+    }
+
+    function Set-UserPath([string[]]$entries) {
+        $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Environment', $true)
+        $key.SetValue('Path', ($entries -join ';'), [Microsoft.Win32.RegistryValueKind]::ExpandString)
+        $key.Close()
+        # Changing a user variable through .NET tells Windows to reload the environment,
+        # so that new terminals see the new PATH.
+        [Environment]::SetEnvironmentVariable('CLAUDIA_PATH_CHANGED', '1', 'User')
+        [Environment]::SetEnvironmentVariable('CLAUDIA_PATH_CHANGED', $null, 'User')
+    }
+
     if ($Uninstall) {
         Stop-Claudia
+        $entries = @(Get-UserPath)
+        if ($entries -contains $installDir) {
+            Set-UserPath @($entries | Where-Object { $_ -ne $installDir })
+        }
         Remove-ItemProperty -Path $runKey -Name 'Claudia' -ErrorAction SilentlyContinue
         foreach ($path in @($installDir, $shortcut, (Join-Path $env:APPDATA 'claudia'), (Join-Path $env:LOCALAPPDATA 'claudia'))) {
             Remove-Item -Recurse -Force -Path $path -ErrorAction SilentlyContinue
@@ -74,6 +96,7 @@
     if ($env:CLAUDIA_DRY_RUN) {
         Write-Host "Would download $base/$asset and $base/SHA256SUMS"
         Write-Host "Would install to $exe, with a Start menu entry"
+        Write-Host "Would add $installDir to your PATH"
         if ($env:CLAUDIA_NO_AUTOSTART) {
             Write-Host "Would not start Claudia at sign-in, and would remove the Claudia value from $runKey if it exists"
         } else {
@@ -118,6 +141,15 @@
     $link.Description = 'Manage your Claude Code settings'
     $link.Save()
 
+    # Lets you type claudia in a terminal. It is a GUI app, so the terminal does not wait for it.
+    $entries = @(Get-UserPath)
+    if ($entries -notcontains $installDir) {
+        Set-UserPath ($entries + $installDir)
+    }
+    if (($env:Path -split ';') -notcontains $installDir) {
+        $env:Path = "$env:Path;$installDir"
+    }
+
     if ($env:CLAUDIA_NO_AUTOSTART) {
         Remove-ItemProperty -Path $runKey -Name 'Claudia' -ErrorAction SilentlyContinue
     } else {
@@ -140,9 +172,8 @@
     } else {
         Write-Host "Claudia did not start. Run `"$exe`" to see why."
     }
-    if ($env:CLAUDIA_NO_AUTOSTART) {
-        Write-Host 'Find it in the Start menu as Claudia.'
-    } else {
-        Write-Host 'It starts again when you sign in. Find it in the Start menu as Claudia.'
+    if (-not $env:CLAUDIA_NO_AUTOSTART) {
+        Write-Host 'It starts again when you sign in.'
     }
+    Write-Host 'To start it or open it, choose Claudia in the Start menu or type claudia in a new terminal.'
 } @args
