@@ -2,20 +2,41 @@
 
 import { ArrowRight, Check, Copy, FolderTree, type LucideIcon, ToggleRight } from 'lucide-react';
 import Link from 'next/link';
-import { type CSSProperties, useEffect, useState } from 'react';
+import { type CSSProperties, type ReactNode, useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
 import { githubUrl } from '@/lib/shared';
 
-const installs = [
+const unixCommand = 'curl -fsSL https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.sh | sh';
+const windowsCommand = 'irm https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.ps1 | iex';
+
+// The install steps, in the words of each system.
+const systems = [
   {
-    id: 'unix',
-    label: 'macOS and Linux',
-    command: 'curl -fsSL https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.sh | sh',
+    id: 'macos',
+    label: 'macOS',
+    terminal: 'Open Terminal',
+    terminalHint: 'Press ⌘ Space, type Terminal, and press Return.',
+    paste: 'Paste this, and press Return',
+    command: unixCommand,
+    later: 'in a terminal, or click its icon in the menu bar.',
+  },
+  {
+    id: 'linux',
+    label: 'Linux',
+    terminal: 'Open a terminal',
+    terminalHint: 'On most desktops, press Ctrl Alt T.',
+    paste: 'Paste this, and press Enter',
+    command: unixCommand,
+    later: 'in a terminal, or click its icon in the tray.',
   },
   {
     id: 'windows',
     label: 'Windows',
-    command: 'irm https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.ps1 | iex',
+    terminal: 'Open PowerShell',
+    terminalHint: 'Press the Windows key, type PowerShell, and press Enter.',
+    paste: 'Paste this, and press Enter',
+    command: windowsCommand,
+    later: 'in a new terminal, or choose Claudia in the Start menu.',
   },
 ];
 
@@ -37,12 +58,14 @@ const grid: CSSProperties = {
 };
 
 export function ClaudiaCard() {
-  const [system, setSystem] = useState('unix');
+  const [system, setSystem] = useState('macos');
   const [copied, setCopied] = useState(false);
-  const install = installs.find((each) => each.id === system) ?? installs[0];
+  const install = systems.find((each) => each.id === system) ?? systems[0];
 
   useEffect(() => {
-    if (/windows/i.test(navigator.userAgent)) setSystem('windows');
+    const agent = navigator.userAgent;
+    if (/windows/i.test(agent)) setSystem('windows');
+    else if (/linux/i.test(agent) && !/android/i.test(agent)) setSystem('linux');
   }, []);
 
   async function copy() {
@@ -76,9 +99,9 @@ export function ClaudiaCard() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           <div role="tablist" aria-label="Your system" className="flex gap-1">
-            {installs.map((each) => (
+            {systems.map((each) => (
               <button
                 key={each.id}
                 type="button"
@@ -94,20 +117,36 @@ export function ClaudiaCard() {
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-2 rounded-xl bg-black/35 p-1.5 pl-4 shadow-lg ring-1 ring-white/20">
-            <code className="min-w-0 flex-1 overflow-x-auto font-mono text-xs whitespace-nowrap text-white/90">
-              {install.command}
-            </code>
-            <button
-              type="button"
-              onClick={copy}
-              aria-label="Copy the install command"
-              className="flex shrink-0 items-center gap-1.5 rounded-lg bg-white px-3.5 py-2 text-sm font-bold text-[#8a321c] shadow-md transition hover:scale-105 active:scale-100"
-            >
-              {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-              {copied ? 'Copied' : 'Copy'}
-            </button>
-          </div>
+
+          <ol className="flex flex-col gap-4">
+            <Step number={1} title={install.terminal}>
+              {install.terminalHint}
+            </Step>
+            <Step number={2} title={install.paste}>
+              <div className="mt-1 flex items-center gap-2 rounded-xl bg-black/35 p-1.5 pl-4 shadow-lg ring-1 ring-white/20">
+                <code className="min-w-0 flex-1 overflow-x-auto font-mono text-xs whitespace-nowrap text-white/90">
+                  {install.command}
+                </code>
+                <button
+                  type="button"
+                  onClick={copy}
+                  aria-label="Copy the install command"
+                  className="flex shrink-0 items-center gap-1.5 rounded-lg bg-white px-3.5 py-2 text-sm font-bold text-[#8a321c] shadow-md transition hover:scale-105 active:scale-100"
+                >
+                  {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+                  {copied ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+            </Step>
+            <Step number={3} title="Start Claudia">
+              The install starts Claudia and opens it in your browser. Later, type{' '}
+              <code className="rounded-md bg-black/35 px-1.5 py-0.5 font-mono text-xs text-white ring-1 ring-white/20">
+                claudia
+              </code>{' '}
+              {install.later}
+            </Step>
+          </ol>
+
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-sm font-semibold">
             <Link href="/docs" className="group flex items-center gap-1 hover:underline">
               Read the docs
@@ -153,6 +192,20 @@ export function ClaudiaCard() {
         </Callout>
       </div>
     </section>
+  );
+}
+
+function Step({ number, title, children }: { number: number; title: string; children: ReactNode }) {
+  return (
+    <li className="flex gap-3">
+      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-white text-xs font-bold text-[#8a321c]">
+        {number}
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <p className="font-semibold">{title}</p>
+        <div className="text-sm text-white/80">{children}</div>
+      </div>
+    </li>
   );
 }
 
