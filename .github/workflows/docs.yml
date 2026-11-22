@@ -1,7 +1,8 @@
 name: Docs
 
 # Builds the docs for every pull request, and publishes them to GitHub Pages
-# from main. In the repository settings, set Pages > Source to GitHub Actions.
+# from main, at https://claudesettings.xyz. In the repository settings, set
+# Pages > Source to GitHub Actions, and the custom domain to claudesettings.xyz.
 on:
   push:
     branches: [main]
@@ -34,7 +35,7 @@ jobs:
           cache: npm
           cache-dependency-path: docs/package-lock.json
 
-      # Gives the path of the site, such as /claudia. It is empty for a custom domain.
+      # Gives the path of the site. It is empty with the custom domain, and /claudia without it.
       - id: pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5

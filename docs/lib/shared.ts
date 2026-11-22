@@ -2,6 +2,9 @@ import { createGetUrl } from 'fumadocs-core/source';
 
 export const appName = 'Claudia';
 
+// Where the site is published, for links that must be absolute, such as in the sitemap.
+export const siteUrl = 'https://claudesettings.xyz';
+
 // Set when the site is not at the root of its domain. On GitHub Pages it is the repository name, as in "/claudia".
 export const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 export const docsRoute = '/docs';

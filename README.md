@@ -4,6 +4,8 @@
 
 A tray app that manages your Claude Code `settings.json`, `CLAUDE.md`, memory, MCP servers, skills, plugins and marketplaces, globally and for each project folder. The interface runs in your browser at http://127.0.0.1:7377.
 
+Website and docs: [claudesettings.xyz](https://claudesettings.xyz)
+
 ## Install
 
 ```bash
@@ -14,7 +16,7 @@ curl -fsSL https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/in
 irm https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.ps1 | iex   # Windows
 ```
 
-See the [installation docs](docs/content/docs/installation.mdx) for options and uninstalling.
+See the [installation docs](https://claudesettings.xyz/docs/installation) for options and uninstalling.
 
 ## Layout
 
@@ -52,7 +54,7 @@ You need Go 1.26 or later and Node.js 24 or later.
 | -------- | ------------ |
 | [CI](.github/workflows/ci.yml) | Builds the web interface, runs `go vet`, `go test` and the web lint, and builds for Windows and Linux. |
 | [Release](.github/workflows/release.yml) | Run it from the Actions tab. It builds the assets on macOS, because the macOS tray needs cgo, and makes a draft release named after the version in `VERSION`, with `SHA256SUMS`. Publish the draft on the Releases page, and GitHub creates the tag. |
-| [Docs](.github/workflows/docs.yml) | Builds the docs for pull requests, and publishes them to GitHub Pages from `main`. Set Pages > Source to GitHub Actions in the repository settings. |
+| [Docs](.github/workflows/docs.yml) | Builds the docs for pull requests, and publishes them to GitHub Pages from `main`. In the repository settings, set Pages > Source to GitHub Actions, and the custom domain to `claudesettings.xyz`. |
 
 ## Security
 

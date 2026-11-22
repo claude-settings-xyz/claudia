@@ -9,6 +9,14 @@ export const metadata: Metadata = {
   title: { absolute: 'Claude Code settings.json: every setting, in plain English' },
   description:
     'See what each Claude Code setting does, and set the ones you want. Then copy your settings.json, or paste your own to check it.',
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    url: '/',
+    siteName: 'settings.json',
+    images: { url: 'og.jpg', width: 1200, height: 600, alt: 'Claudia: edit every Claude Code setting with a form, not with JSON' },
+  },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function HomePage() {

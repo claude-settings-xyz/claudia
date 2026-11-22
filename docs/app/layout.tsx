@@ -1,7 +1,7 @@
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import './global.css';
 import { Inter } from 'next/font/google';
-import { basePath } from '@/lib/shared';
+import { basePath, siteUrl } from '@/lib/shared';
 import type { Metadata } from 'next';
 
 const inter = Inter({
@@ -9,6 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(basePath + '/', siteUrl),
   title: {
     template: '%s | Claudia',
     default: 'Claudia',
