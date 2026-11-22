@@ -83,13 +83,6 @@ export function SettingsBrowser({
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-fd-muted-foreground">
-          {search
-            ? results.length === 0
-              ? 'No setting matches your search.'
-              : `${results.length} ${results.length === 1 ? 'setting matches' : 'settings match'} your search.`
-            : current.intro}
-        </p>
         <label className="relative flex shrink-0 items-center sm:w-64">
           <Search className="pointer-events-none absolute left-3 size-4 text-fd-muted-foreground" />
           <input
@@ -110,6 +103,13 @@ export function SettingsBrowser({
             </button>
           )}
         </label>
+        <p className="text-sm text-fd-muted-foreground sm:text-right">
+          {search
+            ? results.length === 0
+              ? 'No setting matches your search.'
+              : `${results.length} ${results.length === 1 ? 'setting matches' : 'settings match'} your search.`
+            : current.intro}
+        </p>
       </div>
 
       {search ? (
