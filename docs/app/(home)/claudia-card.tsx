@@ -88,7 +88,7 @@ export function ClaudiaCard() {
             Edit every setting with a form, not with{' '}
             <span className="text-white/55 line-through decoration-white/80 decoration-[3px]">JSON</span>
           </h2>
-          <div className="flex max-w-xl flex-col gap-7 text-lg text-balance text-white/85">
+          <div className="flex max-w-xl flex-col gap-7 text-lg text-pretty text-white/85">
             <p>Edit your CLAUDE.md, settings.json, MCPs, plugins, skills and more.</p>
             <p>Quick and focused. Written in Go.</p>
           </div>
