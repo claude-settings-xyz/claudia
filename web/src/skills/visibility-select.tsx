@@ -11,8 +11,9 @@ export const visibilities: Record<SkillVisibility, { label: string; hint: string
 
 type Props = {
   value: SkillVisibility | undefined
-  // Set in a project: the value that applies when the project has no override.
-  inherited?: SkillVisibility
+  // Set in a project: what applies when the project has no override. That is
+  // the global choice if there is one, or else the default.
+  inherited?: { value: SkillVisibility; global: boolean }
   disabled?: boolean
   onChange: (value: SkillVisibility | undefined) => void
 }
@@ -20,7 +21,13 @@ type Props = {
 export function VisibilitySelect({ value, inherited, disabled, onChange }: Props) {
   const options = [
     ...(inherited
-      ? [{ value: 'inherit', label: `Inherit (${visibilities[inherited].label})`, hint: 'Uses the global choice.' }]
+      ? [
+          {
+            value: 'inherit',
+            label: `${inherited.global ? 'Inherit' : 'Default'} (${visibilities[inherited.value].label})`,
+            hint: inherited.global ? 'Uses the global choice.' : 'No override is set.',
+          },
+        ]
       : []),
     ...Object.entries(visibilities).map(([key, option]) => ({ value: key, ...option })),
   ]

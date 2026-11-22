@@ -141,7 +141,7 @@ export function SkillsPanel({ dir, actions }: { dir: string; actions: Element | 
               {dir && !current.dir && <ScopeBadge scope="global" />}
               <VisibilitySelect
                 value={dir ? scopeOverrides[current.name] : effective(current.name)}
-                inherited={dir ? inherited(current.name) : undefined}
+                inherited={dir ? { value: inherited(current.name), global: current.name in globalOverrides } : undefined}
                 disabled={!scopeSettings || update.isPending}
                 onChange={(value) => choose(current.name, value)}
               />
