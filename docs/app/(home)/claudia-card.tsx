@@ -15,7 +15,7 @@ const systems = [
     terminal: 'Open Terminal',
     paste: 'Paste this, and press Return',
     command: unixCommand,
-    later: 'in a terminal, or click its icon in the menu bar.',
+    open: 'or tap its icon in the menu bar.',
   },
   {
     id: 'linux',
@@ -23,7 +23,7 @@ const systems = [
     terminal: 'Open a terminal',
     paste: 'Paste this, and press Enter',
     command: unixCommand,
-    later: 'in a terminal, or click its icon in the tray.',
+    open: 'or tap its icon in the tray.',
   },
   {
     id: 'windows',
@@ -31,7 +31,7 @@ const systems = [
     terminal: 'Open PowerShell',
     paste: 'Paste this, and press Enter',
     command: windowsCommand,
-    later: 'in a new terminal, or choose Claudia in the Start menu.',
+    open: 'or open it from the Start menu.',
   },
 ];
 
@@ -132,11 +132,11 @@ export function ClaudiaCard() {
               </div>
             </Step>
             <Step number={3} title="Start Claudia">
-              The install starts Claudia and opens it in your browser. Later, type{' '}
+              Type{' '}
               <code className="rounded-md bg-black/35 px-1.5 py-0.5 font-mono text-xs text-white ring-1 ring-white/20">
                 claudia
               </code>{' '}
-              {install.later}
+              {install.open}
             </Step>
           </ol>
         </div>
