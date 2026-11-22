@@ -17,7 +17,7 @@ On Windows, run this in PowerShell:
 irm https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.ps1 | iex
 ```
 
-The script downloads the latest release and checks it against the checksums of the release. Then it installs Claudia, starts it, and opens the interface in your browser. Claudia also starts each time you log in, without opening the browser.
+The script downloads the latest release and checks it against the `SHA256SUMS` file of the release. Then it installs Claudia, starts it, and opens the interface in your browser. Claudia also starts each time you log in, without opening the browser.
 
 | System  | Claudia goes to                                         | It starts at login from                         |
 | ------- | ------------------------------------------------------- | ----------------------------------------------- |
@@ -33,6 +33,7 @@ To update Claudia, run the same command again. The script stops the running copy
 | ---------------------- | -------------------------------------------------------------- |
 | `CLAUDIA_VERSION`      | Installs this release, for example `v1.2.0`, not the latest one. |
 | `CLAUDIA_NO_AUTOSTART` | Set it to `1` if Claudia must not start when you log in.       |
+| `CLAUDIA_DRY_RUN`      | Set it to `1` to see what the script would do. It changes nothing. |
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.sh | CLAUDIA_VERSION=v1.2.0 sh
@@ -107,7 +108,7 @@ This builds the release assets for macOS, Windows and Linux, on both amd64 and a
 - macOS: `claudia-darwin-<arch>.zip`, which holds `Claudia.app`.
 - Windows: `claudia-windows-<arch>.exe`.
 - Linux: `claudia-linux-<arch>`.
-- `checksums.txt`, with the SHA-256 of each file.
+- `SHA256SUMS`, with the SHA-256 of each file.
 
 Upload all of them to a GitHub release. The install scripts download from the latest release, so mark the new one as the latest.
 

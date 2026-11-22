@@ -6,6 +6,7 @@
 # Options, as environment variables:
 #   CLAUDIA_VERSION=v1.2.0   Install this release instead of the latest one.
 #   CLAUDIA_NO_AUTOSTART=1   Do not start Claudia when you log in.
+#   CLAUDIA_DRY_RUN=1        Show what the script would do, and change nothing.
 #
 # To uninstall:
 #   curl -fsSL https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.sh | sh -s -- --uninstall
@@ -29,7 +30,8 @@ usage() {
 	say "Usage: install.sh [--uninstall]"
 	say ""
 	say "Installs Claudia, starts it, and starts it again when you log in."
-	say "Set CLAUDIA_VERSION to pick a release and CLAUDIA_NO_AUTOSTART=1 to skip the login item."
+	say "Set CLAUDIA_VERSION to pick a release, CLAUDIA_NO_AUTOSTART=1 to skip the login item,"
+	say "and CLAUDIA_DRY_RUN=1 to see what the script would do."
 }
 
 download() {
@@ -42,12 +44,13 @@ download() {
 	fi
 }
 
-# The API only answers requests that send the X-Claudia header.
-responds() {
+# Prints the health response of the running Claudia. The API only answers
+# requests that send the X-Claudia header.
+health() {
 	if has curl; then
-		curl -fsS -m 2 -H 'X-Claudia: 1' -o /dev/null "http://127.0.0.1:$port/api/health" 2>/dev/null
+		curl -fsS -m 2 -H 'X-Claudia: 1' "http://127.0.0.1:$port/api/health" 2>/dev/null
 	else
-		wget -q -T 2 --header 'X-Claudia: 1' -O /dev/null "http://127.0.0.1:$port/api/health" 2>/dev/null
+		wget -q -T 2 --header 'X-Claudia: 1' -O - "http://127.0.0.1:$port/api/health" 2>/dev/null
 	fi
 }
 
@@ -78,24 +81,36 @@ detect() {
 	if [ "$os" = darwin ] && [ "$arch" = amd64 ] && [ "$(sysctl -n sysctl.proc_translated 2>/dev/null || true)" = 1 ]; then
 		arch=arm64
 	fi
-}
 
-# Downloads a release asset into $tmp and checks it against checksums.txt.
-fetch() {
-	asset=$1
 	if [ "$version" = latest ]; then
 		base="$releases/latest/download"
 	else
 		base="$releases/download/$version"
 	fi
+}
 
+# Downloads a release asset into $tmp and checks it against SHA256SUMS.
+fetch() {
+	asset=$1
 	say "Downloading $asset ($version)..."
 	download "$base/$asset" "$tmp/$asset" || fail "could not download $base/$asset."
-	download "$base/checksums.txt" "$tmp/checksums.txt" || fail "could not download $base/checksums.txt."
+	download "$base/SHA256SUMS" "$tmp/SHA256SUMS" || fail "could not download $base/SHA256SUMS."
 
-	expected=$(awk -v name="$asset" '$2 == name || $2 == "*" name { print $1; exit }' "$tmp/checksums.txt")
-	[ -n "$expected" ] || fail "checksums.txt has no entry for $asset."
-	[ "$(sha256 "$tmp/$asset")" = "$expected" ] || fail "the download of $asset is damaged. Try again."
+	expected=$(awk -v name="$asset" '$2 == name || $2 == "*" name { print $1; exit }' "$tmp/SHA256SUMS")
+	[ -n "$expected" ] || fail "SHA256SUMS has no entry for $asset."
+	actual=$(sha256 "$tmp/$asset")
+	[ "$actual" = "$expected" ] || fail "the download of $asset is damaged (expected $expected, got $actual). Try again."
+}
+
+# Shows what the script would do, for CLAUDIA_DRY_RUN=1.
+dry_run() {
+	say "Would download $base/$1 and $base/SHA256SUMS"
+	say "Would install to $2"
+	if [ -n "${CLAUDIA_NO_AUTOSTART:-}" ]; then
+		say "Would not start Claudia at login, and would remove $3 if it exists"
+	else
+		say "Would start Claudia at login from $3"
+	fi
 }
 
 stop_running() {
@@ -121,47 +136,67 @@ open_url() {
 	fi
 }
 
-# Waits until the server answers, then opens the interface.
+# Waits until Claudia answers, then opens it in the browser and reads its version.
 open_when_ready() {
 	tries=0
 	while [ "$tries" -lt 15 ]; do
-		if responds; then
+		if response=$(health); then
+			running=$(printf '%s' "$response" | sed -n 's/.*"version":"\([^"]*\)".*/\1/p')
 			open_url "http://127.0.0.1:$port"
 			return 0
 		fi
 		sleep 1
 		tries=$((tries + 1))
 	done
-	say "Claudia did not start. Run $1 to see why."
+	return 1
+}
+
+# Opens Claudia once it runs and says how it went. The argument says where the icon shows.
+report() {
+	say ""
+	if open_when_ready; then
+		say "Claudia ${running:-} is running in the $1."
+	else
+		say "Claudia did not start. Run \"$binary\" to see why."
+	fi
+	if [ -z "${CLAUDIA_NO_AUTOSTART:-}" ]; then
+		say "It starts again when you log in."
+	fi
 }
 
 install_macos() {
-	fetch "claudia-darwin-$arch.zip"
+	asset="claudia-darwin-$arch.zip"
 	app="$HOME/Applications/Claudia.app"
 	binary="$app/Contents/MacOS/claudia"
 	agent="$HOME/Library/LaunchAgents/$label.plist"
+	if [ -n "${CLAUDIA_DRY_RUN:-}" ]; then
+		dry_run "$asset" "$app" "$agent"
+		return
+	fi
 
-	ditto -x -k "$tmp/claudia-darwin-$arch.zip" "$tmp/unzipped"
+	fetch "$asset"
+	ditto -x -k "$tmp/$asset" "$tmp/unzipped"
 	[ -d "$tmp/unzipped/Claudia.app" ] || fail "the download does not contain Claudia.app."
 
 	stop_running
 	mkdir -p "$HOME/Applications"
 	rm -rf "$app"
 	mv "$tmp/unzipped/Claudia.app" "$app"
+	# curl does not set the quarantine flag, but remove it in case something else did.
+	xattr -dr com.apple.quarantine "$app" 2>/dev/null || true
 	say "Installed $app"
 
 	if [ -n "${CLAUDIA_NO_AUTOSTART:-}" ]; then
 		rm -f "$agent"
-		open "$app"
-		say ""
-		say "Claudia is running in the menu bar."
+		open "$app" --args -no-open
+		report "menu bar"
 		say "To start it when you log in, add it in System Settings > General > Login Items."
 		return
 	fi
 
 	# A launch agent starts Claudia at login without opening the browser.
 	mkdir -p "$HOME/Library/LaunchAgents"
-	cat >"$agent" <<EOF
+	cat >"$agent" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -179,34 +214,29 @@ install_macos() {
 	<string>Interactive</string>
 </dict>
 </plist>
-EOF
+PLIST
 
-	if launchctl bootstrap "gui/$(id -u)" "$agent" 2>/dev/null; then
-		open_when_ready "$binary"
-	else
-		# Outside a desktop session, for example over SSH, the agent loads at the next login.
-		open "$app" 2>/dev/null || true
-	fi
-	say ""
-	say "Claudia is running in the menu bar. It starts again when you log in."
+	# Outside a desktop session, for example over SSH, the agent only loads at the next login.
+	launchctl bootstrap "gui/$(id -u)" "$agent" 2>/dev/null || open "$app" --args -no-open 2>/dev/null || true
+	report "menu bar"
 }
 
 # The Claudia logo, for the app menu and the desktop entry.
 write_icon() {
 	mkdir -p "$(dirname "$1")"
-	cat >"$1" <<'EOF'
+	cat >"$1" <<'SVG'
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <rect width="64" height="64" rx="16" fill="#e07a5f"/>
   <rect x="11" y="19.5" width="42" height="25" rx="12.5" fill="none" stroke="#fff" stroke-width="4.5"/>
   <circle cx="41" cy="32" r="6.5" fill="#fff"/>
 </svg>
-EOF
+SVG
 }
 
 # Writes a desktop entry. The second argument adds options to the command.
 write_entry() {
 	mkdir -p "$(dirname "$1")"
-	cat >"$1" <<EOF
+	cat >"$1" <<ENTRY
 [Desktop Entry]
 Type=Application
 Name=Claudia
@@ -215,20 +245,25 @@ Exec="$binary"$2
 Icon=claudia
 Terminal=false
 Categories=Development;Utility;
-EOF
+ENTRY
 }
 
 install_linux() {
-	fetch "claudia-linux-$arch"
+	asset="claudia-linux-$arch"
 	bin_dir="$HOME/.local/bin"
 	binary="$bin_dir/claudia"
 	data="${XDG_DATA_HOME:-$HOME/.local/share}"
 	autostart="${XDG_CONFIG_HOME:-$HOME/.config}/autostart/claudia.desktop"
+	if [ -n "${CLAUDIA_DRY_RUN:-}" ]; then
+		dry_run "$asset" "$binary" "$autostart"
+		return
+	fi
 
+	fetch "$asset"
 	stop_running
 	mkdir -p "$bin_dir"
 	# Copy next to the target first, so that the rename replaces the old file in one step.
-	cp "$tmp/claudia-linux-$arch" "$binary.new"
+	cp "$tmp/$asset" "$binary.new"
 	chmod 755 "$binary.new"
 	mv -f "$binary.new" "$binary"
 	say "Installed $binary"
@@ -243,15 +278,10 @@ install_linux() {
 
 	if [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
 		nohup "$binary" -no-open >/dev/null 2>&1 &
-		open_when_ready "$binary"
-		say ""
-		say "Claudia is running in the tray."
+		report "tray"
 	else
 		say ""
 		say "There is no desktop session, so Claudia did not start. Run claudia to start it."
-	fi
-	if [ -z "${CLAUDIA_NO_AUTOSTART:-}" ]; then
-		say "It starts when you log in."
 	fi
 
 	case ":$PATH:" in

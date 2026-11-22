@@ -20,7 +20,7 @@ app: build
 	cp bin/claudia bin/Claudia.app/Contents/MacOS/claudia
 	sed 's/VERSION/$(VERSION)/' packaging/darwin/Info.plist > bin/Claudia.app/Contents/Info.plist
 
-# Release assets in bin/release, as install.sh and install.ps1 expect them.
+# Release assets and their SHA256SUMS in bin/release, as install.sh and install.ps1 expect them.
 # macOS gets a zipped menu bar app. Run this on a Mac: the macOS tray needs cgo.
 release: web
 	rm -rf bin/release
@@ -38,7 +38,7 @@ release: web
 	GOOS=windows GOARCH=arm64 go build -ldflags "$(LDFLAGS) -H=windowsgui" -o bin/release/claudia-windows-arm64.exe .
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/release/claudia-linux-amd64 .
 	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/release/claudia-linux-arm64 .
-	cd bin/release && shasum -a 256 claudia-* > checksums.txt
+	cd bin/release && shasum -a 256 claudia-* > SHA256SUMS
 
 # Go API on :7377 and Vite on :5173. Open http://localhost:5173.
 dev:

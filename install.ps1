@@ -1,10 +1,11 @@
-# Installs Claudia on Windows.
+# Installs Claudia on Windows, with PowerShell 5.1 or later.
 #
 #   irm https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.ps1 | iex
 #
 # Options, as environment variables:
 #   $env:CLAUDIA_VERSION = 'v1.2.0'   Install this release instead of the latest one.
 #   $env:CLAUDIA_NO_AUTOSTART = '1'   Do not start Claudia when you sign in.
+#   $env:CLAUDIA_DRY_RUN = '1'        Show what the script would do, and change nothing.
 #
 # To uninstall:
 #   & ([scriptblock]::Create((irm https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.ps1))) -Uninstall
@@ -28,7 +29,7 @@
     $exe = Join-Path $installDir 'claudia.exe'
     $shortcut = Join-Path ([Environment]::GetFolderPath('Programs')) 'Claudia.lnk'
     $runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
-    $port = 7377
+    $url = 'http://127.0.0.1:7377'
 
     function Stop-Claudia {
         $running = @(Get-Process -Name claudia -ErrorAction SilentlyContinue)
@@ -39,13 +40,13 @@
         }
     }
 
-    # The API only answers requests that send the X-Claudia header.
-    function Test-Running {
+    # Returns the version of the running Claudia, or nothing. The API only
+    # answers requests that send the X-Claudia header.
+    function Get-RunningVersion {
         try {
-            Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 -Headers @{ 'X-Claudia' = '1' } -Uri "http://127.0.0.1:$port/api/health" | Out-Null
-            return $true
+            (Invoke-RestMethod -UseBasicParsing -TimeoutSec 2 -Headers @{ 'X-Claudia' = '1' } -Uri "$url/api/health").version
         } catch {
-            return $false
+            $null
         }
     }
 
@@ -69,28 +70,42 @@
 
     $asset = "claudia-windows-$arch.exe"
     $base = if ($version -eq 'latest') { "$releases/latest/download" } else { "$releases/download/$version" }
+
+    if ($env:CLAUDIA_DRY_RUN) {
+        Write-Host "Would download $base/$asset and $base/SHA256SUMS"
+        Write-Host "Would install to $exe, with a Start menu entry"
+        if ($env:CLAUDIA_NO_AUTOSTART) {
+            Write-Host "Would not start Claudia at sign-in, and would remove the Claudia value from $runKey if it exists"
+        } else {
+            Write-Host "Would start Claudia at sign-in from $runKey"
+        }
+        return
+    }
+
     $tmp = Join-Path ([IO.Path]::GetTempPath()) ('claudia-' + [Guid]::NewGuid())
     New-Item -ItemType Directory -Path $tmp | Out-Null
-
     try {
         Write-Host "Downloading $asset ($version)..."
         $download = Join-Path $tmp $asset
-        $checksums = Join-Path $tmp 'checksums.txt'
+        $sums = Join-Path $tmp 'SHA256SUMS'
         Invoke-WebRequest -UseBasicParsing -Uri "$base/$asset" -OutFile $download
-        Invoke-WebRequest -UseBasicParsing -Uri "$base/checksums.txt" -OutFile $checksums
+        Invoke-WebRequest -UseBasicParsing -Uri "$base/SHA256SUMS" -OutFile $sums
 
-        $expected = Get-Content $checksums | ForEach-Object {
+        $expected = Get-Content $sums | ForEach-Object {
             $fields = $_ -split '\s+'
-            if ($fields.Count -ge 2 -and $fields[1].TrimStart('*') -eq $asset) { $fields[0] }
+            if ($fields.Count -ge 2 -and $fields[1].TrimStart('*') -eq $asset) { $fields[0].ToLowerInvariant() }
         } | Select-Object -First 1
-        if (-not $expected) { throw "checksums.txt has no entry for $asset." }
-        if ((Get-FileHash -Algorithm SHA256 -Path $download).Hash -ne $expected) {
-            throw "The download of $asset is damaged. Try again."
+        if (-not $expected) { throw "SHA256SUMS has no entry for $asset." }
+        $actual = (Get-FileHash -Algorithm SHA256 -Path $download).Hash.ToLowerInvariant()
+        if ($actual -ne $expected) {
+            throw "The download of $asset is damaged (expected $expected, got $actual). Try again."
         }
 
         Stop-Claudia
         New-Item -ItemType Directory -Force -Path $installDir | Out-Null
         Move-Item -Force -Path $download -Destination $exe
+        # Invoke-WebRequest does not mark the file as downloaded, but clear the mark in case something else did.
+        Unblock-File -Path $exe -ErrorAction SilentlyContinue
     } finally {
         Remove-Item -Recurse -Force -Path $tmp -ErrorAction SilentlyContinue
     }
@@ -109,23 +124,25 @@
         New-ItemProperty -Path $runKey -Name 'Claudia' -Value "`"$exe`" -no-open" -PropertyType String -Force | Out-Null
     }
 
-    # Claudia opens the browser itself when it starts without -no-open.
-    Start-Process -FilePath $exe
-    $started = $false
+    # Start without the browser, wait until Claudia answers, then open it.
+    Start-Process -FilePath $exe -ArgumentList '-no-open'
+    $running = $null
     foreach ($attempt in 1..15) {
-        if (Test-Running) { $started = $true; break }
+        $running = Get-RunningVersion
+        if ($running) { break }
         Start-Sleep -Seconds 1
     }
 
     Write-Host ''
-    if ($started) {
-        Write-Host 'Claudia is running in the notification area.'
+    if ($running) {
+        Start-Process $url
+        Write-Host "Claudia $running is running in the notification area."
     } else {
-        Write-Host "Claudia did not start. Run $exe to see why."
+        Write-Host "Claudia did not start. Run `"$exe`" to see why."
     }
-    if (-not $env:CLAUDIA_NO_AUTOSTART) {
-        Write-Host 'It starts when you sign in. Find it in the Start menu as Claudia.'
-    } else {
+    if ($env:CLAUDIA_NO_AUTOSTART) {
         Write-Host 'Find it in the Start menu as Claudia.'
+    } else {
+        Write-Host 'It starts again when you sign in. Find it in the Start menu as Claudia.'
     }
 } @args
