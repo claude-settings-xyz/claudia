@@ -50,7 +50,7 @@ export function SuggestionsButton({ settings, schema }: { settings: Settings; sc
 
   return (
     <Sheet>
-      <SheetTrigger render={<Button variant="outline" size="sm" className="shrink-0" />}>
+      <SheetTrigger render={<Button variant="outline" size="sm" className="ml-auto shrink-0" />}>
         <Lightbulb data-icon="inline-start" />
         Suggestions
         {open.length > 0 && (
