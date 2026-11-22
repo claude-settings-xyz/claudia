@@ -131,7 +131,7 @@ export function ClaudiaCard() {
                 </button>
               </div>
             </Step>
-            <Step number={3} title="Start Claudia">
+            <Step number={3} title="Start">
               Type{' '}
               <code className="rounded-md bg-black/35 px-1.5 py-0.5 font-mono text-xs text-white ring-1 ring-white/20">
                 claudia
