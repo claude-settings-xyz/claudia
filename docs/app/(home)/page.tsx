@@ -18,7 +18,7 @@ export default function HomePage() {
     <main className="flex flex-1 flex-col gap-20 pb-24">
       <Hero count={count} />
 
-      <div className="relative mx-auto w-full max-w-6xl px-4 sm:mt-10 sm:px-6">
+      <div className="relative mx-auto mt-8 w-full max-w-6xl px-4 sm:mt-32 sm:px-6">
         <ConfigNote />
         <Configuration categories={categories} known={known} />
       </div>

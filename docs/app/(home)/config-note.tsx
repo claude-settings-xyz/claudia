@@ -3,12 +3,12 @@ import { cn } from '@/lib/cn';
 
 const handwriting = Caveat({ subsets: ['latin'], weight: '600' });
 
-// A hand-drawn note that points down to the Configuration heading.
+// A hand-drawn note that points down to the middle of the Configuration section.
 export function ConfigNote() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute -top-20 left-36 hidden items-start text-[#b4482a] select-none sm:flex dark:text-[#f5936a]"
+      className="pointer-events-none absolute -top-24 left-1/2 hidden -translate-x-[23px] items-start text-[#b4482a] select-none sm:flex dark:text-[#f5936a]"
     >
       <svg viewBox="0 0 120 90" className="h-[90px] w-[120px] shrink-0 overflow-visible">
         <path
@@ -27,7 +27,7 @@ export function ConfigNote() {
           strokeLinejoin="round"
         />
       </svg>
-      <p className={cn(handwriting.className, '-mt-2 -ml-1 -rotate-3 text-[1.7rem] leading-none whitespace-nowrap')}>
+      <p className={cn(handwriting.className, '-mt-2 -ml-1 -rotate-3 text-[1.7rem] leading-none whitespace-nowrap text-fd-foreground')}>
         Create or edit your existing configuration
       </p>
     </div>
