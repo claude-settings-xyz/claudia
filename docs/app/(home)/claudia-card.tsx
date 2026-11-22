@@ -15,7 +15,7 @@ const systems = [
     terminal: 'Open Terminal',
     paste: 'Paste this, and press Return',
     command: unixCommand,
-    open: 'or tap its icon in the menu bar.',
+    open: 'or tap its icon in the menu bar',
   },
   {
     id: 'linux',
@@ -23,7 +23,7 @@ const systems = [
     terminal: 'Open a terminal',
     paste: 'Paste this, and press Enter',
     command: unixCommand,
-    open: 'or tap its icon in the tray.',
+    open: 'or tap its icon in the tray',
   },
   {
     id: 'windows',
@@ -31,7 +31,7 @@ const systems = [
     terminal: 'Open PowerShell',
     paste: 'Paste this, and press Enter',
     command: windowsCommand,
-    open: 'or open it from the Start menu.',
+    open: 'or open it from the Start menu',
   },
 ];
 
@@ -77,12 +77,13 @@ export function ClaudiaCard() {
     >
       <div aria-hidden style={grid} className="absolute inset-0 -z-10" />
 
-      <div className="grid grid-cols-1 gap-8 p-6 sm:p-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-end lg:p-14">
+      <div className="grid grid-cols-1 gap-x-8 gap-y-5 p-6 sm:p-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:p-14">
+        <div className="flex items-center gap-2.5 lg:col-span-2">
+          <Logo />
+          <span className="text-lg font-semibold">Claudia</span>
+        </div>
+
         <div className="flex flex-col gap-5">
-          <div className="flex items-center gap-2.5">
-            <Logo />
-            <span className="text-lg font-semibold">Claudia</span>
-          </div>
           <h2 className="text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
             Edit every setting with a form, not with{' '}
             <span className="text-white/55 line-through decoration-white/80 decoration-[3px]">JSON</span>
@@ -92,7 +93,7 @@ export function ClaudiaCard() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="mt-3 flex flex-col gap-4 lg:mt-0">
           <div role="tablist" aria-label="Your system" className="flex gap-1">
             {systems.map((each) => (
               <button
@@ -129,13 +130,18 @@ export function ClaudiaCard() {
                 </button>
               </div>
             </Step>
-            <Step number={3} title="Start">
-              Type{' '}
-              <code className="rounded-md bg-black/35 px-1.5 py-0.5 font-mono text-xs text-white ring-1 ring-white/20">
-                claudia
-              </code>{' '}
-              {install.open}
-            </Step>
+            <Step
+              number={3}
+              title={
+                <>
+                  Type{' '}
+                  <code className="rounded-md bg-black/35 px-1.5 py-0.5 font-mono text-sm text-white ring-1 ring-white/20">
+                    claudia
+                  </code>{' '}
+                  {install.open}
+                </>
+              }
+            />
           </ol>
         </div>
       </div>
@@ -176,7 +182,7 @@ export function ClaudiaCard() {
   );
 }
 
-function Step({ number, title, children }: { number: number; title: string; children?: ReactNode }) {
+function Step({ number, title, children }: { number: number; title: ReactNode; children?: ReactNode }) {
   return (
     <li className="flex gap-3">
       <span className="grid size-6 shrink-0 place-items-center rounded-full bg-white text-xs font-bold text-[#8a321c]">
