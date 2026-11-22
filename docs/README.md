@@ -15,7 +15,9 @@ The site is a [static export](https://nextjs.org/docs/app/guides/static-exports)
 | Path                      | What it is                                                          |
 | ------------------------- | ------------------------------------------------------------------- |
 | `content/docs`            | The pages, in MDX. `meta.json` sets their order.                     |
-| `app/(home)`              | The landing page.                                                   |
+| `app/(home)`              | The homepage: every setting of `settings.json`, the builder, and the Claudia card. |
+| `app/(home)/categories.ts` | The groups of settings on the homepage, and the examples.          |
+| `app/(home)/settings-schema.json` | The settings schema of Claude Code. Run `make settings-schema` in the repository after you update Claude Code. |
 | `app/docs`                | The docs layout and pages.                                          |
 | `lib/shared.ts`           | The app name, the routes, and the GitHub repository for the links.  |
 | `lib/source.ts`           | Loads the pages, with the [Macro API](https://fumadocs.dev/docs/mdx/macro). |

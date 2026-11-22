@@ -1,7 +1,7 @@
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 LDFLAGS := -s -w -X main.version=$(VERSION)
 
-.PHONY: build web app release dev dev-go dev-web docs test clean
+.PHONY: build web app release dev dev-go dev-web docs settings-schema test clean
 
 build: web
 	go build -ldflags "$(LDFLAGS)" -o bin/claudia .
@@ -53,9 +53,14 @@ dev-web: web/node_modules
 docs:
 	cd docs && npm run dev
 
+# The docs homepage lists the settings of the Claude Code on this computer. Run
+# this after you update Claude Code.
+settings-schema:
+	go run ./cmd/settings-schema > "docs/app/(home)/settings-schema.json"
+
 # Only list Go packages by name: web/node_modules can contain stray .go files.
 test: web
-	go vet . ./internal/... ./web
+	go vet . ./cmd/... ./internal/... ./web
 	go test ./internal/...
 
 clean:

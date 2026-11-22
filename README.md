@@ -39,6 +39,7 @@ make test     # go vet and go test
 make app      # bin/Claudia.app for macOS (menu bar only)
 make release  # release assets and checksums in bin/release
 make docs     # docs dev server. cd docs && npm run build writes the static site to docs/out
+make settings-schema  # refresh the settings list of the docs homepage from your Claude Code
 ```
 
 You need Go 1.26 or later and Node.js 24 or later.
