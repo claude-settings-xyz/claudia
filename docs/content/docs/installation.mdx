@@ -1,14 +1,67 @@
 ---
 title: Installation
-description: Build Claudia from source and run it.
+description: Install Claudia with one command, or build it from source.
 ---
 
-## Requirements
+## Install
+
+On macOS and Linux, run this in a terminal:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.sh | sh
+```
+
+On Windows, run this in PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.ps1 | iex
+```
+
+The script downloads the latest release and checks it against the checksums of the release. Then it installs Claudia, starts it, and opens the interface in your browser. Claudia also starts each time you log in, without opening the browser.
+
+| System  | Claudia goes to                                         | It starts at login from                         |
+| ------- | ------------------------------------------------------- | ----------------------------------------------- |
+| macOS   | `~/Applications/Claudia.app`                            | `~/Library/LaunchAgents/app.claudia.plist`      |
+| Linux   | `~/.local/bin/claudia`, with an entry in the app menu   | `~/.config/autostart/claudia.desktop`           |
+| Windows | `%LOCALAPPDATA%\Programs\Claudia`, with a Start menu entry | The `Run` key in `HKEY_CURRENT_USER`            |
+
+To update Claudia, run the same command again. The script stops the running copy before it replaces it.
+
+### Options
+
+| Variable               | Effect                                                         |
+| ---------------------- | -------------------------------------------------------------- |
+| `CLAUDIA_VERSION`      | Installs this release, for example `v1.2.0`, not the latest one. |
+| `CLAUDIA_NO_AUTOSTART` | Set it to `1` if Claudia must not start when you log in.       |
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.sh | CLAUDIA_VERSION=v1.2.0 sh
+```
+
+```powershell
+$env:CLAUDIA_VERSION = 'v1.2.0'; irm https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.ps1 | iex
+```
+
+### Uninstall
+
+The uninstall removes Claudia, its login item, and its own settings and cache. It does not change your Claude Code files.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.sh | sh -s -- --uninstall
+```
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.ps1))) -Uninstall
+```
+
+## Build from source
+
+### Requirements
 
 - Go 1.26 or later
 - Node.js 24 or later
 
-## Build
+### Build
 
 ```bash
 make build
@@ -16,7 +69,7 @@ make build
 
 This builds the web interface first. Then it builds the binary into `bin/claudia`. The web interface is embedded in the binary, so you only need that one file.
 
-## Run
+### Run
 
 ```bash
 ./bin/claudia
@@ -26,7 +79,7 @@ Claudia adds its icon to the tray and opens the interface in your browser.
 
 If Claudia is already running, a second launch does not start a new copy. It opens the browser for the running instance.
 
-### Flags
+#### Flags
 
 | Flag       | Default | Description                                  |
 | ---------- | ------- | -------------------------------------------- |
@@ -49,7 +102,14 @@ The `dev` build tag skips the embedded web files, so you do not need to build th
 make release
 ```
 
-This builds binaries for macOS, Windows and Linux, on both amd64 and arm64, into `bin/`. Run it on a Mac, because the macOS tray code needs cgo.
+This builds the release assets for macOS, Windows and Linux, on both amd64 and arm64, into `bin/release`. Run it on a Mac, because the macOS tray code needs cgo.
+
+- macOS: `claudia-darwin-<arch>.zip`, which holds `Claudia.app`.
+- Windows: `claudia-windows-<arch>.exe`.
+- Linux: `claudia-linux-<arch>`.
+- `checksums.txt`, with the SHA-256 of each file.
+
+Upload all of them to a GitHub release. The install scripts download from the latest release, so mark the new one as the latest.
 
 ## Platform notes
 

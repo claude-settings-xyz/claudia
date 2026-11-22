@@ -20,13 +20,25 @@ app: build
 	cp bin/claudia bin/Claudia.app/Contents/MacOS/claudia
 	sed 's/VERSION/$(VERSION)/' packaging/darwin/Info.plist > bin/Claudia.app/Contents/Info.plist
 
+# Release assets in bin/release, as install.sh and install.ps1 expect them.
+# macOS gets a zipped menu bar app. Run this on a Mac: the macOS tray needs cgo.
 release: web
-	GOOS=darwin GOARCH=arm64 go build -ldflags "$(LDFLAGS)" -o bin/claudia-darwin-arm64 .
-	GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o bin/claudia-darwin-amd64 .
-	GOOS=windows GOARCH=amd64 go build -ldflags "$(LDFLAGS) -H=windowsgui" -o bin/claudia-windows-amd64.exe .
-	GOOS=windows GOARCH=arm64 go build -ldflags "$(LDFLAGS) -H=windowsgui" -o bin/claudia-windows-arm64.exe .
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/claudia-linux-amd64 .
-	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/claudia-linux-arm64 .
+	rm -rf bin/release
+	mkdir -p bin/release
+	for arch in arm64 amd64; do \
+		app=bin/release/darwin-$$arch/Claudia.app; \
+		mkdir -p $$app/Contents/MacOS; \
+		GOOS=darwin GOARCH=$$arch CGO_ENABLED=1 go build -ldflags "$(LDFLAGS)" -o $$app/Contents/MacOS/claudia . || exit 1; \
+		sed 's/VERSION/$(VERSION)/' packaging/darwin/Info.plist > $$app/Contents/Info.plist; \
+		codesign --force --sign - $$app || exit 1; \
+		ditto -c -k --keepParent $$app bin/release/claudia-darwin-$$arch.zip || exit 1; \
+		rm -rf bin/release/darwin-$$arch; \
+	done
+	GOOS=windows GOARCH=amd64 go build -ldflags "$(LDFLAGS) -H=windowsgui" -o bin/release/claudia-windows-amd64.exe .
+	GOOS=windows GOARCH=arm64 go build -ldflags "$(LDFLAGS) -H=windowsgui" -o bin/release/claudia-windows-arm64.exe .
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/release/claudia-linux-amd64 .
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/release/claudia-linux-arm64 .
+	cd bin/release && shasum -a 256 claudia-* > checksums.txt
 
 # Go API on :7377 and Vite on :5173. Open http://localhost:5173.
 dev:
