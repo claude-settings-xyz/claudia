@@ -1,7 +1,7 @@
 import { Download } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { githubUrl } from '@/lib/shared';
+import { basePath, githubUrl } from '@/lib/shared';
 import { source } from '@/lib/source';
 import { Logo } from './logo';
 import { getSettings } from './settings-data';
@@ -15,7 +15,7 @@ export function Footer() {
     <footer className="border-t bg-fd-card/40">
       <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-x-6 gap-y-10 px-6 py-14 lg:grid-cols-[minmax(0,1.2fr)_repeat(4,minmax(0,1fr))]">
         <div className="col-span-2 flex flex-col gap-3 lg:col-span-1">
-          <a href="/#claudia" className="flex items-center gap-2.5 text-lg font-semibold">
+          <a href="#claudia" className="flex items-center gap-2.5 text-lg font-semibold">
             <Logo className="size-7 rounded-[7px] drop-shadow-none ring-1 ring-fd-border" />
             Claudia
           </a>
@@ -23,7 +23,7 @@ export function Footer() {
             Edit your CLAUDE.md, settings.json, MCPs, plugins, skills and more. Quick and focused. Written in Go.
           </p>
           <a
-            href="/#claudia"
+            href="#claudia"
             className="mt-2 flex items-center gap-2 self-start rounded-lg bg-linear-to-b from-[#e0703f] to-[#b4482a] px-4 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-white/20 transition hover:brightness-110"
           >
             <Download className="size-4" />
@@ -44,11 +44,11 @@ export function Footer() {
 
         <Column title="Claude Code settings">
           {categories.map((category) => (
-            <Item key={category.id} href={`/#settings-${category.id}`}>
+            <Item key={category.id} href={`#settings-${category.id}`}>
               {category.label}
             </Item>
           ))}
-          <Item href="/#json">Check your settings.json</Item>
+          <Item href="#json">Check your settings.json</Item>
         </Column>
 
         <Column title="Claudia docs">
@@ -68,12 +68,12 @@ export function Footer() {
         </Column>
 
         <Column title="Resources">
-          <Item href="/#claudia">Install Claudia</Item>
+          <Item href="#claudia">Install Claudia</Item>
           <Item href={githubUrl}>Claudia on GitHub</Item>
           <Item href={`${githubUrl}/releases`}>Releases</Item>
           <Item href={`${githubUrl}/issues`}>Report a problem</Item>
           <Item href="https://json.schemastore.org/claude-code-settings.json">settings.json schema</Item>
-          <Item href="/llms.txt">llms.txt</Item>
+          <Item href={`${basePath}/llms.txt`}>llms.txt</Item>
         </Column>
       </div>
     </footer>
@@ -89,12 +89,12 @@ function Column({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-// Links to a part of this page are plain links, so that the page sees the new hash.
+// Only pages use Link. Links to a part of this page stay plain, so that the page sees the new hash.
 function Item({ href, children }: { href: string; children: ReactNode }) {
-  const plain = href.startsWith('http') || href.startsWith('/#');
+  const page = href.startsWith('/') && !/\.\w+$/.test(href);
   return (
     <li>
-      {plain ? (
+      {!page ? (
         <a href={href} className="text-fd-muted-foreground transition-colors hover:text-fd-foreground">
           {children}
         </a>

@@ -3,6 +3,7 @@
 import { Check, Copy, FolderTree, type LucideIcon, ToggleRight } from 'lucide-react';
 import { type CSSProperties, type ReactNode, useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
+import { basePath } from '@/lib/shared';
 import { Logo } from './logo';
 
 const unixCommand = 'curl -fsSL https://raw.githubusercontent.com/claude-settings-xyz/claudia/main/install.sh | sh';
@@ -162,7 +163,7 @@ export function ClaudiaCard() {
             <div className="max-h-[26rem] overflow-hidden sm:max-h-[34rem]">
               {/* A plain img, because a static export cannot optimize images. */}
               <img
-                src="/claudia.jpg"
+                src={`${basePath}/claudia.jpg`}
                 alt="Claudia, with the settings of a project as a form: a text field, a list of choices and switches"
                 width={2400}
                 height={1520}

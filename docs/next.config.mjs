@@ -6,6 +6,8 @@ const withMDX = createMDX();
 const config = {
   // A static site in out/, so that any file host can serve it.
   output: 'export',
+  // For example "/claudia" on GitHub Pages. Empty at the root of a domain.
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || undefined,
   reactStrictMode: true,
 };
 

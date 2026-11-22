@@ -8,7 +8,7 @@ npm run build   # static site in out/
 npm run start   # serves out/ to check the build
 ```
 
-The site is a [static export](https://nextjs.org/docs/app/guides/static-exports), so any file host can serve `out/`. Search runs in the browser from an index that the build writes to `/api/search`. The Markdown of each page is at `/llms.mdx/docs/<page>.md`, and `/llms.txt` and `/llms-full.txt` list all pages.
+The site is a [static export](https://nextjs.org/docs/app/guides/static-exports), so any file host can serve `out/`. To serve it from a folder, such as `/claudia` on GitHub Pages, build it with `NEXT_PUBLIC_BASE_PATH=/claudia`. The Docs workflow sets it for you. Search runs in the browser from an index that the build writes to `/api/search`. The Markdown of each page is at `/llms.mdx/docs/<page>.md`, and `/llms.txt` and `/llms-full.txt` list all pages.
 
 ## Where things are
 

@@ -1,6 +1,7 @@
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import './global.css';
 import { Inter } from 'next/font/google';
+import { basePath } from '@/lib/shared';
 import type { Metadata } from 'next';
 
 const inter = Inter({
@@ -19,7 +20,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="en" className={inter.className} suppressHydrationWarning>
       <body className="flex flex-col min-h-screen">
-        <RootProvider search={{ options: { type: 'static' } }}>{children}</RootProvider>
+        <RootProvider search={{ options: { type: 'static', api: `${basePath}/api/search` } }}>{children}</RootProvider>
       </body>
     </html>
   );
